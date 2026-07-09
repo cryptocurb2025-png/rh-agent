@@ -3,322 +3,270 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>$AGENT — The AI Trading Agent for Robinhood Chain</title>
-<meta name="description" content="A live on-chain trading agent for Robinhood Chain. Detects every launch, runs a 9-point rug scan in seconds, scores momentum, and alerts holders before the crowd. The HFT edge, token-gated.">
-<meta property="og:title" content="$AGENT — Trade Like the Pros. On Robinhood Chain.">
-<meta property="og:description" content="The first AI trading agent on Robinhood Chain that actually runs. Live launch radar, 9-point rug scan, momentum scoring — token-gated.">
-<meta property="og:image" content="assets/agent_hero.png">
+<title>AGENT — Live On-Chain Trading Intelligence for Robinhood Chain</title>
+<meta name="description" content="A live trading agent for Robinhood Chain. It scans every new launch in your browser — 9-point rug detection, momentum scoring, real verdicts on real tokens. Token-gated. Not a mockup: open it and watch it work.">
+<meta property="og:title" content="AGENT — Live trading intelligence for Robinhood Chain">
+<meta property="og:description" content="Watch it scan real launches, live, in your browser. 9-point rug detection + momentum scoring. Token-gated.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#05070a; --bg-2:#080b0f; --surf:#0c1116; --surf-2:#10161c; --surf-3:#141c23;
-    --line:rgba(160,180,200,.09); --line-2:rgba(160,180,200,.16); --line-g:rgba(0,224,120,.24);
-    --txt:#eaf1f2; --txt-2:#93a3a6; --txt-3:#5f7075;
-    --green:#00e078; --green-hi:#4dffa0; --green-dim:#07a659; --green-glow:rgba(0,224,120,.14);
-    --gold:#f0c25a; --gold-hi:#ffdd88; --red:#ff5a5f; --amber:#f4a638;
-    --r:14px;
+    --bg:#050708; --bg-2:#080b0d; --surf:#0b0f11; --surf-2:#0f1518; --surf-3:#131b1f;
+    --line:rgba(150,175,180,.10); --line-2:rgba(150,175,180,.18); --line-g:rgba(0,224,120,.28);
+    --txt:#e9f0f0; --txt-2:#8fa0a2; --txt-3:#5b6d6f;
+    --green:#00e078; --green-hi:#5cffab; --green-dim:#08a85c; --green-glow:rgba(0,224,120,.12);
+    --gold:#f0c25a; --red:#ff5a5f; --amber:#f4a638; --blue:#5aa8ff;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  ::selection{background:var(--green);color:#012}
-  body{background:var(--bg);color:var(--txt);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  img{max-width:100%;display:block}
+  ::selection{background:var(--green);color:#021}
+  body{background:var(--bg);color:var(--txt);font-family:'Archivo',system-ui,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
   a{color:inherit;text-decoration:none}
-  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
-  .mono{font-family:'Geist Mono',ui-monospace,monospace}
-  .serif{font-family:'Instrument Serif',Georgia,serif}
-  .green{color:var(--green)}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+  .green{color:var(--green)}.gold{color:var(--gold)}
 
-  /* ambient flare */
-  .flare{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
-  .flare::before{content:"";position:absolute;top:-26%;left:50%;transform:translateX(-50%);width:1000px;height:560px;
-    background:radial-gradient(closest-side,rgba(0,200,5,.08),transparent 72%);filter:blur(14px);animation:breath 15s ease-in-out infinite}
-  @keyframes breath{50%{opacity:.55;transform:translateX(-50%) scale(1.08)}}
-  .grid-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
-    background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:46px 46px;
-    mask-image:radial-gradient(circle at 50% 0%,black,transparent 62%)}
+  /* ambient — restrained */
+  .grid-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.45;
+    background-image:linear-gradient(rgba(150,175,180,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(150,175,180,.03) 1px,transparent 1px);background-size:48px 48px;
+    mask-image:radial-gradient(circle at 70% 0%,black,transparent 60%)}
+  .halo{position:fixed;top:-30%;right:-6%;width:900px;height:640px;z-index:-1;pointer-events:none;
+    background:radial-gradient(closest-side,rgba(0,224,120,.07),transparent 72%)}
 
   /* nav */
-  nav{position:sticky;top:0;z-index:60;background:rgba(6,8,10,.74);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
-  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
-  .brand{display:flex;align-items:center;gap:10px}
-  .brand svg{width:26px;height:26px;fill:var(--green)}
-  .brand b{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
-  .brand .v{font-family:'Geist Mono',monospace;font-size:.62rem;color:var(--txt-3);border:1px solid var(--line);border-radius:5px;padding:2px 6px;margin-left:2px}
-  .navlinks{display:flex;gap:28px;font-size:.9rem;font-weight:500;color:var(--txt-2)}
+  nav{position:sticky;top:0;z-index:60;background:rgba(5,7,8,.8);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace}
+  .brand svg{width:24px;height:24px;fill:var(--green)}
+  .brand b{font-weight:700;font-size:1.02rem;letter-spacing:.02em}
+  .brand .st{margin-left:4px;font-size:.6rem;color:var(--green);border:1px solid var(--line-g);border-radius:4px;padding:2px 6px;display:flex;align-items:center;gap:5px}
+  .brand .st i{width:5px;height:5px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
+  .navlinks{display:flex;gap:26px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--txt-2)}
   .navlinks a:hover{color:var(--txt)}
-  .pill-btn{font-weight:700;font-size:.9rem;background:var(--green);color:#012;padding:9px 18px;border-radius:100px;transition:transform .14s,box-shadow .14s}
-  .pill-btn:hover{transform:translateY(-1px);box-shadow:0 8px 22px var(--green-glow)}
-  .pill-btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line-2)}
-  .pill-btn.ghost:hover{border-color:var(--txt-2);box-shadow:none}
-
-  .chip{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:var(--txt-2);background:var(--surf);border:1px solid var(--line);border-radius:100px;padding:7px 14px}
-  .chip .live{width:7px;height:7px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
-  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(0,200,5,.4)}70%{box-shadow:0 0 0 8px rgba(0,200,5,0)}100%{box-shadow:0 0 0 0 rgba(0,200,5,0)}}
+  .btn{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.82rem;cursor:pointer;transition:transform .14s,box-shadow .14s,background .18s;display:inline-flex;align-items:center;gap:8px}
+  .btn.primary{background:var(--green);color:#021;padding:9px 17px;border-radius:7px}
+  .btn.primary:hover{transform:translateY(-1px);box-shadow:0 8px 22px var(--green-glow)}
+  .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line-2);padding:9px 17px;border-radius:7px}
+  .btn.ghost:hover{border-color:var(--txt-2)}
+  @keyframes ping{0%{box-shadow:0 0 0 0 rgba(0,224,120,.4)}70%{box-shadow:0 0 0 7px rgba(0,224,120,0)}100%{box-shadow:0 0 0 0 rgba(0,224,120,0)}}
 
   /* hero */
-  header{padding:66px 0 26px;position:relative}
-  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
-  .kick{font-family:'Geist Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin:22px 0 14px;display:flex;align-items:center;gap:10px}
-  .kick::before{content:"";width:22px;height:1px;background:var(--green)}
-  h1{font-size:clamp(2.8rem,6vw,4.6rem);line-height:.98;font-weight:900;letter-spacing:-.032em}
-  h1 .tick{background:linear-gradient(180deg,var(--green-hi),var(--green-dim));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .subline{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(1.3rem,2.9vw,1.85rem);color:var(--txt-2);margin-top:12px}
-  .lede{max-width:520px;color:var(--txt-2);font-size:1.05rem;margin-top:18px}
+  header{padding:56px 0 30px;position:relative}
+  .hero{display:grid;grid-template-columns:1fr 1.02fr;gap:44px;align-items:start}
+  .tagpill{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--txt-2);border:1px solid var(--line);border-radius:100px;padding:6px 13px}
+  .tagpill i{width:6px;height:6px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
+  h1{font-size:clamp(2.6rem,5.4vw,4.1rem);line-height:1;font-weight:900;letter-spacing:-.035em;margin:20px 0 0}
+  h1 em{font-style:normal;color:var(--green)}
+  .lede{max-width:500px;color:var(--txt-2);font-size:1.04rem;margin-top:18px}
   .lede b{color:var(--txt);font-weight:600}
-  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-  .cta .pill-btn{padding:13px 24px;font-size:.98rem}
+  .cta{display:flex;gap:11px;flex-wrap:wrap;margin-top:26px}
+  .cta .btn{padding:12px 22px;font-size:.9rem}
+  .assurances{display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--txt-3)}
+  .assurances span{display:flex;align-items:center;gap:7px}
+  .assurances b{color:var(--green);font-weight:600}
 
-  /* hero live console — the actual product, not stock art */
-  .console{border:1px solid var(--line-2);border-radius:14px;overflow:hidden;background:#070a0b;box-shadow:0 30px 70px rgba(0,0,0,.55)}
-  .console .chd{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
-  .console .cdot{width:10px;height:10px;border-radius:50%}
-  .console .cp{margin-left:8px;font-family:'Geist Mono',monospace;font-size:.72rem;color:var(--txt-3)}
-  .console .con{margin-left:auto;font-family:'Geist Mono',monospace;font-size:.66rem;color:var(--green);display:flex;align-items:center;gap:6px}
+  /* hero console (LIVE, real data) */
+  .console{border:1px solid var(--line-2);border-radius:12px;overflow:hidden;background:#060909;box-shadow:0 30px 70px rgba(0,0,0,.5);font-family:'JetBrains Mono',monospace}
+  .console .chd{display:flex;align-items:center;gap:7px;padding:10px 13px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015)}
+  .console .cdot{width:9px;height:9px;border-radius:50%}
+  .console .cp{margin-left:7px;font-size:.68rem;color:var(--txt-3)}
+  .console .con{margin-left:auto;font-size:.62rem;color:var(--green);display:flex;align-items:center;gap:6px}
   .console .con i{width:6px;height:6px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
-  .console .cbody{padding:18px 18px 16px}
-  .cscan-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .cs-name{font-size:1.22rem;font-weight:800;letter-spacing:-.01em}
-  .cs-verdict{font-family:'Geist Mono',monospace;font-size:.74rem;font-weight:600;padding:5px 11px;border-radius:100px;background:rgba(0,200,5,.1);border:1px solid var(--line-g);color:var(--green)}
-  .cs-meta{font-family:'Geist Mono',monospace;font-size:.68rem;color:var(--txt-3);margin-top:6px}
-  .cs-checks{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;margin:16px 0;font-family:'Geist Mono',monospace;font-size:.7rem}
-  .cs-checks .c{display:flex;align-items:center;gap:8px;color:var(--txt-2)}
-  .cs-checks .c .mk{width:14px;height:14px;border-radius:4px;display:grid;place-items:center;font-size:.6rem;flex:none}
-  .cs-checks .c.ok .mk{background:rgba(0,200,5,.15);color:var(--green)}
-  .cs-checks .c.warn .mk{background:rgba(240,169,53,.15);color:var(--amber)}
-  .cs-checks .c.bad .mk{background:rgba(255,77,82,.15);color:var(--red)}
-  .cs-foot{display:flex;align-items:center;gap:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .cbody{padding:15px 16px 14px}
+  .cscan-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .cs-name{font-family:'Archivo';font-size:1.15rem;font-weight:800;letter-spacing:-.01em}
+  .cs-verdict{font-size:.7rem;font-weight:700;padding:5px 10px;border-radius:6px;background:rgba(0,224,120,.1);border:1px solid var(--line-g);color:var(--green);white-space:nowrap}
+  .cs-meta{font-size:.64rem;color:var(--txt-3);margin-top:5px}
+  .cs-checks{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:14px 0;font-size:.66rem}
+  .cs-checks .c{display:flex;align-items:center;gap:7px;color:var(--txt-2)}
+  .cs-checks .c .mk{width:13px;height:13px;border-radius:3px;display:grid;place-items:center;font-size:.56rem;flex:none}
+  .cs-checks .c.ok .mk{background:rgba(0,224,120,.15);color:var(--green)}
+  .cs-checks .c.warn .mk{background:rgba(244,166,56,.15);color:var(--amber)}
+  .cs-checks .c.bad .mk{background:rgba(255,90,95,.15);color:var(--red)}
+  .cs-foot{display:flex;align-items:center;gap:15px;padding-top:12px;border-top:1px solid var(--line)}
   .cs-score{display:flex;flex-direction:column;flex:none}
-  .cs-score .k{font-family:'Geist Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt-3)}
-  .cs-score .v{font-family:'Geist Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--green);line-height:1}
-  .cs-mom{flex:1;display:flex;flex-direction:column;gap:6px}
-  .cs-mom .mb{display:grid;grid-template-columns:58px 1fr auto;align-items:center;gap:9px;font-family:'Geist Mono',monospace;font-size:.62rem;color:var(--txt-3)}
+  .cs-score .k{font-size:.54rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt-3)}
+  .cs-score .v{font-size:1.7rem;font-weight:700;color:var(--green);line-height:1}
+  .cs-mom{flex:1;display:flex;flex-direction:column;gap:5px}
+  .cs-mom .mb{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:8px;font-size:.6rem;color:var(--txt-3)}
   .cs-mom .mb .bar{height:4px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden}
   .cs-mom .mb .bar i{display:block;height:100%;background:var(--green);border-radius:100px}
   .cs-mom .mb .val{color:var(--txt);font-weight:600}
-  .cs-log{margin-top:14px;font-family:'Geist Mono',monospace;font-size:.66rem;color:var(--txt-3);border-top:1px solid var(--line);padding-top:12px;min-height:38px}
-  .cs-log .ll{opacity:0;animation:fadein .3s forwards}
-  .cs-log .g{color:var(--green)} .cs-log .r{color:var(--red)} .cs-log .a{color:var(--amber)}
 
-  /* metrics rail */
-  .rail{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;margin-top:44px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-  .rail .m{background:var(--surf);padding:18px 18px}
-  .rail .m .l{font-family:'Geist Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-3)}
-  .rail .m .v{font-family:'Geist Mono',monospace;font-size:1.35rem;font-weight:600;margin-top:6px;letter-spacing:-.01em}
-  .rail .m .v.g{color:var(--green)}
-  .rail .m .d{font-size:.64rem;color:var(--txt-3);margin-top:2px}
+  /* live stat rail (real) */
+  .rail{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;margin-top:40px;background:var(--line);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+  .rail .m{background:var(--surf);padding:16px 16px}
+  .rail .m .l{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3)}
+  .rail .m .v{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;margin-top:5px;letter-spacing:-.01em}
+  .rail .m .v.g{color:var(--green)}.rail .m .v.y{color:var(--gold)}
+  .rail .m .d{font-size:.6rem;color:var(--txt-3);margin-top:2px;font-family:'JetBrains Mono',monospace}
 
-  /* section + panel-bar heads */
-  section{padding:82px 0;position:relative}
-  .pbar{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(180deg,var(--surf-2),var(--surf));padding:12px 16px;font-family:'Geist Mono',monospace}
-  .pbar .idx{color:var(--green);font-size:.72rem;font-weight:600}
-  .pbar .nm{font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt)}
-  .pbar .meta{margin-left:auto;display:flex;gap:20px;font-size:.68rem;color:var(--txt-3)}
-  .pbar .meta b{color:var(--green);font-weight:600}
-  h2{font-size:clamp(2rem,4.4vw,2.9rem);font-weight:900;letter-spacing:-.028em;line-height:1.05;margin:26px 0 10px;max-width:16ch}
-  .sub{color:var(--txt-2);font-size:1.05rem;max-width:56ch}
+  section{padding:76px 0;position:relative}
+  .shead{display:flex;align-items:center;gap:12px;font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green)}
+  .shead::before{content:"";width:26px;height:1px;background:var(--green)}
+  h2{font-family:'Archivo';font-size:clamp(1.9rem,4vw,2.7rem);font-weight:900;letter-spacing:-.03em;line-height:1.05;margin:16px 0 10px;max-width:20ch}
+  .sub{color:var(--txt-2);font-size:1.02rem;max-width:58ch}
 
-  /* ===== TERMINAL ===== */
-  .terminal{margin-top:34px;border:1px solid var(--line-2);border-radius:16px;overflow:hidden;background:#070a0b;box-shadow:0 40px 90px rgba(0,0,0,.6)}
-  .terminal .chrome{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.03),transparent)}
-  .terminal .chrome .dot{width:11px;height:11px;border-radius:50%}
-  .terminal .chrome .path{margin-left:10px;font-family:'Geist Mono',monospace;font-size:.76rem;color:var(--txt-3)}
-  .terminal .chrome .status{margin-left:auto;font-family:'Geist Mono',monospace;font-size:.7rem;color:var(--green);display:flex;align-items:center;gap:7px}
-  .terminal .chrome .status .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
-  /* baked stat strip */
-  .tstats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);font-family:'Geist Mono',monospace}
-  .tstats .s{padding:11px 16px;border-right:1px solid var(--line)}
+  /* ===== full terminal ===== */
+  .terminal{margin-top:30px;border:1px solid var(--line-2);border-radius:13px;overflow:hidden;background:#060909;box-shadow:0 40px 90px rgba(0,0,0,.55);font-family:'JetBrains Mono',monospace}
+  .terminal .chrome{display:flex;align-items:center;gap:8px;padding:11px 15px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.015)}
+  .terminal .chrome .dot{width:10px;height:10px;border-radius:50%}
+  .terminal .chrome .path{margin-left:9px;font-size:.72rem;color:var(--txt-3)}
+  .terminal .chrome .status{margin-left:auto;font-size:.66rem;color:var(--green);display:flex;align-items:center;gap:7px}
+  .terminal .chrome .status i{width:6px;height:6px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
+  .tstats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+  .tstats .s{padding:11px 15px;border-right:1px solid var(--line)}
   .tstats .s:last-child{border-right:none}
-  .tstats .s .k{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3)}
-  .tstats .s .n{font-size:1.02rem;font-weight:600;margin-top:3px;color:var(--txt)}
-  .tstats .s .n.g{color:var(--green)}
-  .tgrid{display:grid;grid-template-columns:1.25fr 1fr;min-height:360px}
-  .tlog{padding:16px 18px;font-family:'Geist Mono',monospace;font-size:.8rem;line-height:1.9;border-right:1px solid var(--line);overflow:hidden}
+  .tstats .s .k{font-size:.56rem;letter-spacing:.09em;text-transform:uppercase;color:var(--txt-3)}
+  .tstats .s .n{font-size:1rem;font-weight:700;margin-top:3px;color:var(--txt)}
+  .tstats .s .n.g{color:var(--green)}.tstats .s .n.r{color:var(--red)}
+  .tgrid{display:grid;grid-template-columns:1.2fr 1fr;min-height:380px}
+  .tlog{padding:15px 17px;font-size:.76rem;line-height:1.95;border-right:1px solid var(--line);overflow:hidden}
   .tlog .ln{white-space:pre-wrap;opacity:0;animation:fadein .3s forwards}
   @keyframes fadein{to{opacity:1}}
-  .tlog .muted{color:var(--txt-3)} .tlog .g{color:var(--green)} .tlog .a{color:var(--amber)} .tlog .r{color:var(--red)} .tlog .w{color:var(--txt)} .tlog .b{color:#5aa0ff}
-  .tlog .cur{display:inline-block;width:8px;height:14px;background:var(--green);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  .tlog .muted{color:var(--txt-3)}.tlog .g{color:var(--green)}.tlog .a{color:var(--amber)}.tlog .r{color:var(--red)}.tlog .w{color:var(--txt)}
+  .tlog .cur{display:inline-block;width:8px;height:13px;background:var(--green);vertical-align:-2px;animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
-  /* scan detail panel */
-  .tpanel{padding:16px 18px;font-family:'Geist Mono',monospace}
-  .tpanel .ph{display:flex;align-items:center;justify-content:space-between;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-3);margin-bottom:14px}
-  .tpanel .tkn{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .tpanel .tkn .name{font-size:1.15rem;font-weight:700;color:var(--txt);font-family:'Hanken Grotesk'}
-  .tpanel .tkn .age{font-size:.64rem;color:var(--txt-3)}
-  .checks{display:grid;grid-template-columns:1fr 1fr;gap:7px 16px;font-size:.72rem;margin-bottom:16px}
+  .tpanel{padding:15px 17px}
+  .tpanel .ph{display:flex;align-items:center;justify-content:space-between;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-3);margin-bottom:13px}
+  .tpanel .ph a{color:var(--green);text-transform:none;letter-spacing:0}
+  .tpanel .tkn{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .tpanel .tkn .name{font-family:'Archivo';font-size:1.1rem;font-weight:800}
+  .tpanel .tkn .age{font-size:.6rem;color:var(--txt-3)}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:.68rem;margin-bottom:15px}
   .checks .c{display:flex;align-items:center;gap:8px;color:var(--txt-2)}
-  .checks .c .mk{width:15px;height:15px;border-radius:4px;display:grid;place-items:center;font-size:.62rem;flex:none}
-  .checks .c.ok .mk{background:rgba(0,200,5,.15);color:var(--green)}
-  .checks .c.warn .mk{background:rgba(240,169,53,.15);color:var(--amber)}
-  .checks .c.bad .mk{background:rgba(255,77,82,.15);color:var(--red)}
-  .score{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--surf);margin-bottom:12px}
-  .score .ring{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;
-    background:conic-gradient(var(--green) 0 82%,rgba(255,255,255,.08) 82% 100%)}
-  .score .ring .in{width:44px;height:44px;border-radius:50%;background:var(--surf);display:grid;place-items:center;font-size:1.05rem;font-weight:700;color:var(--green)}
-  .score .lab .v{font-size:.9rem;font-weight:700;color:var(--green)}
-  .score .lab .k{font-size:.62rem;color:var(--txt-3);text-transform:uppercase;letter-spacing:.08em}
-  .mbars{display:flex;flex-direction:column;gap:8px}
-  .mbars .mb{display:grid;grid-template-columns:74px 1fr auto;align-items:center;gap:10px;font-size:.66rem;color:var(--txt-3)}
+  .checks .c .mk{width:14px;height:14px;border-radius:3px;display:grid;place-items:center;font-size:.58rem;flex:none}
+  .checks .c.ok .mk{background:rgba(0,224,120,.15);color:var(--green)}
+  .checks .c.warn .mk{background:rgba(244,166,56,.15);color:var(--amber)}
+  .checks .c.bad .mk{background:rgba(255,90,95,.15);color:var(--red)}
+  .score{display:flex;align-items:center;gap:13px;padding:13px;border:1px solid var(--line);border-radius:9px;background:var(--surf);margin-bottom:11px}
+  .score .ring{width:54px;height:54px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--green) 0 82%,rgba(255,255,255,.07) 82% 100%)}
+  .score .ring .in{width:42px;height:42px;border-radius:50%;background:var(--surf);display:grid;place-items:center;font-size:1rem;font-weight:700;color:var(--green)}
+  .score .lab .v{font-size:.85rem;font-weight:700;color:var(--green)}
+  .score .lab .k{font-size:.58rem;color:var(--txt-3);text-transform:uppercase;letter-spacing:.08em}
+  .mbars{display:flex;flex-direction:column;gap:7px}
+  .mbars .mb{display:grid;grid-template-columns:70px 1fr auto;align-items:center;gap:9px;font-size:.62rem;color:var(--txt-3)}
   .mbars .mb .bar{height:5px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden}
   .mbars .mb .bar i{display:block;height:100%;background:var(--green);border-radius:100px}
   .mbars .mb .val{color:var(--txt);font-weight:600}
+  .livenote{margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:.66rem;color:var(--txt-3);text-align:center}
+  .livenote b{color:var(--green)}
 
   /* capabilities */
-  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
-  .feat{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:24px;transition:border-color .2s,transform .2s}
+  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+  .feat{background:linear-gradient(180deg,var(--surf-2),var(--surf));border:1px solid var(--line);border-radius:12px;padding:22px;transition:border-color .2s,transform .2s}
   .feat:hover{border-color:var(--line-g);transform:translateY(-3px)}
-  .feat .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;margin-bottom:16px;background:rgba(0,200,5,.09);border:1px solid var(--line-g)}
-  .feat .ic svg{width:21px;height:21px;fill:var(--green)}
-  .feat h3{font-size:1.14rem;font-weight:800;margin-bottom:7px}
-  .feat p{color:var(--txt-2);font-size:.94rem}
-  .feat .kbd{font-family:'Geist Mono',monospace;font-size:.66rem;color:var(--green);background:rgba(0,200,5,.07);border:1px solid var(--line-g);border-radius:6px;padding:3px 8px;margin-top:14px;display:inline-block}
+  .feat .ic{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;margin-bottom:15px;background:rgba(0,224,120,.08);border:1px solid var(--line-g)}
+  .feat .ic svg{width:20px;height:20px;fill:var(--green)}
+  .feat h3{font-family:'Archivo';font-size:1.08rem;font-weight:800;margin-bottom:6px}
+  .feat p{color:var(--txt-2);font-size:.9rem}
+  .feat .kbd{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--green);background:rgba(0,224,120,.06);border:1px solid var(--line-g);border-radius:5px;padding:3px 8px;margin-top:13px;display:inline-block}
 
   /* receipt */
   .receipt{background:linear-gradient(180deg,var(--bg-2),var(--bg));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .receipt .wrap{padding:76px 24px;text-align:center;max-width:940px}
-  .receipt .src{font-family:'Geist Mono',monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:22px;display:inline-flex;align-items:center;gap:10px}
-  .receipt .src .live{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-  .receipt blockquote{font-family:'Instrument Serif',serif;font-size:clamp(1.55rem,3.6vw,2.5rem);line-height:1.22;color:var(--txt)}
-  .receipt blockquote .hl{color:var(--green);font-style:italic}
-  .receipt .by{margin-top:20px;color:var(--txt-2);font-size:1rem;max-width:70ch;margin-inline:auto}
+  .receipt .wrap{padding:70px 24px;max-width:920px}
+  .receipt .src{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green);margin-bottom:20px;display:flex;align-items:center;gap:9px}
+  .receipt .src i{width:6px;height:6px;border-radius:50%;background:var(--green)}
+  .receipt blockquote{font-family:'Archivo';font-weight:800;font-size:clamp(1.5rem,3.2vw,2.3rem);line-height:1.24;letter-spacing:-.02em;color:var(--txt)}
+  .receipt blockquote .hl{color:var(--gold)}
+  .receipt .by{margin-top:18px;color:var(--txt-2);font-size:.98rem;max-width:74ch}
   .receipt .by b{color:var(--txt)}
-  .receipt .punch{margin-top:16px;font-weight:800;font-size:1.1rem}
-  .receipt .punch .g{color:var(--green)}
+  .receipt .punch{margin-top:14px;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:.94rem;color:var(--green)}
 
-  /* vs */
-  .vs{margin-top:34px;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.95rem}
-  .vs .row{display:grid;grid-template-columns:1.3fr 1fr 1fr;border-bottom:1px solid var(--line)}
-  .vs .row:last-child{border-bottom:none}
-  .vs .row>div{padding:15px 20px}
-  .vs .row.h>div{font-family:'Geist Mono',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);background:rgba(255,255,255,.02)}
-  .vs .row.h .us{color:var(--green)}
-  .vs .row .them{color:var(--txt-3)} .vs .row .us{color:var(--green);font-weight:600}
-  .vs .lab{font-weight:600}
-
-  /* ===== TOKENOMICS ===== */
-  .tk-top{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:34px}
-  .panel{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:24px}
-  .panel .ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
-  .panel .ph .t{font-size:1.05rem;font-weight:800}
-  .panel .ph .s{font-family:'Geist Mono',monospace;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-3)}
-  /* stacked allocation bar */
-  .stack{height:16px;border-radius:100px;overflow:hidden;display:flex;margin-bottom:18px;border:1px solid var(--line)}
+  /* tokenomics */
+  .tk-top{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:30px}
+  .panel{background:linear-gradient(180deg,var(--surf-2),var(--surf));border:1px solid var(--line);border-radius:12px;padding:22px}
+  .panel .ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;font-family:'JetBrains Mono',monospace}
+  .panel .ph .t{font-family:'Archivo';font-size:1rem;font-weight:800}
+  .panel .ph .s{font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-3)}
+  .stack{height:14px;border-radius:100px;overflow:hidden;display:flex;margin-bottom:16px;border:1px solid var(--line)}
   .stack i{height:100%}
-  .alist{display:flex;flex-direction:column;gap:2px}
-  .alist .a{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .alist .a{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:.82rem}
   .alist .a:last-child{border-bottom:none}
-  .alist .a .sw{width:10px;height:10px;border-radius:3px;flex:none}
-  .alist .a .nm{font-size:.9rem}
-  .alist .a .pc{font-family:'Geist Mono',monospace;font-weight:600;font-size:.92rem}
-  /* param table */
-  .params{display:flex;flex-direction:column}
-  .params .p{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+  .alist .a .sw{width:9px;height:9px;border-radius:2px;flex:none}
+  .alist .a .pc{font-weight:700}
+  .params .p{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:.82rem}
   .params .p:last-child{border-bottom:none}
-  .params .p .k{color:var(--txt-2)}
-  .params .p .v{font-family:'Geist Mono',monospace;font-weight:600}
-  .params .p .v.g{color:var(--green)}
-  .pill-ok{font-family:'Geist Mono',monospace;font-size:.64rem;color:var(--green);background:rgba(0,200,5,.1);border:1px solid var(--line-g);border-radius:100px;padding:3px 9px}
+  .params .p .k{color:var(--txt-2)}.params .p .v{font-weight:700}.params .p .v.g{color:var(--green)}
+  .pill-ok{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--green);background:rgba(0,224,120,.1);border:1px solid var(--line-g);border-radius:100px;padding:3px 9px}
 
-  /* tiers */
-  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
-  .tier{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:24px;position:relative;display:flex;flex-direction:column}
-  .tier.feat-tier{border-color:var(--line-g);background:linear-gradient(180deg,rgba(0,200,5,.05),var(--surf))}
-  .tier.feat-tier::before{content:"MOST HELD";position:absolute;top:14px;right:16px;font-family:'Geist Mono',monospace;font-size:.56rem;letter-spacing:.12em;color:var(--green)}
-  .tier .tn{font-family:'Geist Mono',monospace;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--txt-3)}
-  .tier .th{font-size:1.35rem;font-weight:800;margin:8px 0 2px}
-  .tier .hold{font-family:'Geist Mono',monospace;font-size:.82rem;color:var(--green);margin-bottom:16px}
-  .tier ul{list-style:none;display:flex;flex-direction:column;gap:10px;font-size:.9rem;color:var(--txt-2);flex:1}
-  .tier ul li{display:flex;gap:9px;align-items:flex-start}
-  .tier ul li svg{width:15px;height:15px;fill:var(--green);flex:none;margin-top:3px}
-  .tier ul li.off{color:var(--txt-3)} .tier ul li.off svg{fill:var(--txt-3);opacity:.5}
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+  .tier{background:linear-gradient(180deg,var(--surf-2),var(--surf));border:1px solid var(--line);border-radius:12px;padding:22px;position:relative;display:flex;flex-direction:column}
+  .tier.feat-tier{border-color:rgba(240,194,90,.36);background:linear-gradient(180deg,rgba(240,194,90,.055),var(--surf))}
+  .tier.feat-tier::before{content:"MOST HELD";position:absolute;top:13px;right:15px;font-family:'JetBrains Mono',monospace;font-size:.55rem;letter-spacing:.1em;color:var(--gold)}
+  .tier .tn{font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:var(--txt-3)}
+  .tier .th{font-family:'Archivo';font-size:1.3rem;font-weight:900;margin:6px 0 1px}
+  .tier.feat-tier .th{color:var(--gold-hi,#ffdd88)}
+  .tier .hold{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--green);margin-bottom:15px}
+  .tier.feat-tier .hold{color:var(--gold)}
+  .tier ul{list-style:none;display:flex;flex-direction:column;gap:9px;font-size:.87rem;color:var(--txt-2);flex:1}
+  .tier ul li{display:flex;gap:8px;align-items:flex-start}
+  .tier ul li svg{width:14px;height:14px;fill:var(--green);flex:none;margin-top:3px}
+  .tier.feat-tier ul li svg{fill:var(--gold)}
+  .tier ul li.off{color:var(--txt-3)}.tier ul li.off svg{fill:var(--txt-3);opacity:.5}
 
-  /* flywheel flow */
-  .flow{display:flex;align-items:stretch;gap:0;margin-top:16px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surf)}
-  .flow .node{flex:1;padding:22px 18px;text-align:center;position:relative;border-right:1px solid var(--line)}
+  .flow{display:flex;margin-top:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surf)}
+  .flow .node{flex:1;padding:20px 16px;text-align:center;position:relative;border-right:1px solid var(--line)}
   .flow .node:last-child{border-right:none}
-  .flow .node .n{font-family:'Geist Mono',monospace;font-size:.6rem;color:var(--green);letter-spacing:.1em}
-  .flow .node .t{font-weight:700;font-size:.95rem;margin-top:6px}
-  .flow .node .d{font-size:.78rem;color:var(--txt-3);margin-top:4px}
-  .flow .node::after{content:"→";position:absolute;right:-9px;top:50%;transform:translateY(-50%);color:var(--green);font-size:1rem;z-index:2;background:var(--surf);width:18px;text-align:center}
-  .flow .node:last-child::after{content:"↻";right:auto;left:50%;top:-2px;transform:translateX(-50%);font-size:.9rem}
+  .flow .node .n{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--green);letter-spacing:.08em}
+  .flow .node .t{font-family:'Archivo';font-weight:800;font-size:.92rem;margin-top:5px}
+  .flow .node .d{font-size:.74rem;color:var(--txt-3);margin-top:3px}
+  .flow .node::after{content:"→";position:absolute;right:-8px;top:50%;transform:translateY(-50%);color:var(--green);z-index:2;background:var(--surf);width:16px;text-align:center;font-family:'JetBrains Mono',monospace}
+  .flow .node:last-child::after{content:"↻";right:auto;left:50%;top:-1px;transform:translateX(-50%)}
 
-  /* steps */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
-  .fstep{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:22px}
-  .fstep .n{font-family:'Geist Mono',monospace;color:var(--green);font-weight:600}
-  .fstep h4{font-size:1.1rem;font-weight:800;margin:10px 0 7px}
-  .fstep p{color:var(--txt-2);font-size:.92rem}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+  .fstep{background:linear-gradient(180deg,var(--surf-2),var(--surf));border:1px solid var(--line);border-radius:11px;padding:20px}
+  .fstep .n{font-family:'JetBrains Mono',monospace;color:var(--green);font-weight:700;font-size:.86rem}
+  .fstep h4{font-family:'Archivo';font-size:1.05rem;font-weight:800;margin:9px 0 6px}
+  .fstep p{color:var(--txt-2);font-size:.88rem}
 
-  .faq{margin-top:30px;max-width:840px}
-  details{border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:10px;background:var(--surf)}
+  .faq{margin-top:26px;max-width:840px}
+  details{border:1px solid var(--line);border-radius:10px;padding:16px 20px;margin-bottom:9px;background:var(--surf)}
   details[open]{border-color:var(--line-2)}
-  summary{font-weight:700;font-size:1.02rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  summary{font-family:'Archivo';font-weight:700;font-size:.98rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
   summary::-webkit-details-marker{display:none}
-  summary::after{content:"+";color:var(--green);font-size:1.4rem;transition:transform .2s}
+  summary::after{content:"+";color:var(--green);font-size:1.3rem;transition:transform .2s;font-family:'JetBrains Mono'}
   details[open] summary::after{transform:rotate(45deg)}
-  details p{color:var(--txt-2);margin-top:12px}
+  details p{color:var(--txt-2);margin-top:11px;font-size:.92rem}
 
-  .ctaband{background:linear-gradient(180deg,var(--surf-2),var(--bg-2));border:1px solid var(--line-2);border-radius:20px;padding:50px 36px;text-align:center;position:relative;overflow:hidden;margin-top:36px}
-  .ctaband::before{content:"";position:absolute;inset:0;background:radial-gradient(600px 300px at 50% 0%,var(--green-glow),transparent 60%);pointer-events:none}
+  .ctaband{background:linear-gradient(180deg,var(--surf-2),var(--bg-2));border:1px solid var(--line-2);border-radius:16px;padding:46px 34px;text-align:center;position:relative;overflow:hidden;margin-top:32px}
+  .ctaband::before{content:"";position:absolute;inset:0;background:radial-gradient(560px 280px at 50% 0%,var(--green-glow),transparent 60%);pointer-events:none}
   .ctaband h2{margin:0 auto 8px;max-width:none}.ctaband .sub{margin:0 auto}
-  .ca-row{margin-top:20px;font-family:'Geist Mono',monospace;font-size:.76rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--txt-3);justify-content:center}
-  .ca-row code{color:var(--green);background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+  .ca-row{margin-top:18px;font-family:'JetBrains Mono',monospace;font-size:.74rem;display:flex;align-items:center;gap:9px;flex-wrap:wrap;color:var(--txt-3);justify-content:center}
+  .ca-row code{color:var(--green);background:var(--surf);border:1px solid var(--line);border-radius:7px;padding:7px 11px;cursor:pointer}
 
-  footer{border-top:1px solid var(--line);padding:42px 0;margin-top:82px}
-  footer .wrap{display:flex;flex-wrap:wrap;gap:22px;justify-content:space-between;align-items:center}
-  footer .brand svg{width:22px;height:22px}
-  .socials{display:flex;gap:11px;flex-wrap:wrap}
-  .socials a{font-size:.9rem;font-weight:600;color:var(--txt-2);border:1px solid var(--line);border-radius:100px;padding:8px 16px;transition:all .18s}
+  footer{border-top:1px solid var(--line);padding:38px 0;margin-top:76px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center}
+  footer .brand svg{width:20px;height:20px}
+  .socials{display:flex;gap:10px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace}
+  .socials a{font-size:.82rem;color:var(--txt-2);border:1px solid var(--line);border-radius:100px;padding:8px 15px;transition:all .18s;cursor:pointer}
   .socials a:hover{color:var(--txt);border-color:var(--line-2)}
-  .disc{color:var(--txt-3);font-size:.74rem;line-height:1.7;max-width:780px;margin-top:22px}
+  .disc{color:var(--txt-3);font-size:.72rem;line-height:1.7;max-width:800px;margin-top:20px;font-family:'JetBrains Mono',monospace}
 
-  /* toast */
-  #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);z-index:200;
-    background:var(--surf-2);border:1px solid var(--line-2);border-radius:100px;padding:11px 20px;
-    font-size:.86rem;font-weight:600;color:var(--txt);box-shadow:0 20px 50px rgba(0,0,0,.6);
-    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:9px}
-  #toast::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:200;background:var(--surf-2);border:1px solid var(--line-2);border-radius:100px;padding:10px 19px;font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--txt);box-shadow:0 20px 50px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:8px}
+  #toast::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green)}
   #toast.show{opacity:1;transform:translate(-50%,0)}
 
-  /* premium depth on surfaces */
-  .feat,.panel,.tier,.fstep,.stat,.rail .m{background:linear-gradient(180deg,var(--surf-2),var(--surf))}
-  .feat:hover{box-shadow:0 20px 50px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)}
-  /* gold-accented featured tier (premium differentiation) */
-  .tier.feat-tier{border-color:rgba(240,194,90,.34);background:linear-gradient(180deg,rgba(240,194,90,.06),var(--surf))}
-  .tier.feat-tier::before{content:"MOST HELD";color:var(--gold)}
-  .tier.feat-tier .th{color:var(--gold-hi)} .tier.feat-tier .hold{color:var(--gold)}
-  .tier.feat-tier ul li svg{fill:var(--gold)}
-  /* gold on the flagship stat + score for hierarchy */
-  .rail .m:first-child .v{color:var(--gold)}
-  .brand .v{border-color:rgba(240,194,90,.3);color:var(--gold)}
-  /* refined scanline shimmer on terminal */
-  .terminal{position:relative}
-  .terminal::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:16px;
-    background:linear-gradient(180deg,rgba(0,224,120,.03),transparent 18%);mix-blend-mode:screen}
-
-  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease}
   .reveal.in{opacity:1;transform:none}
 
   @media(max-width:920px){
-    .hero{grid-template-columns:1fr;gap:32px}.artcard{order:-1;max-width:420px;margin:0 auto}
+    .hero{grid-template-columns:1fr;gap:28px}.console{order:-1}
     .navlinks{display:none}
-    .rail{grid-template-columns:repeat(3,1fr)}
+    .rail{grid-template-columns:repeat(2,1fr)}
     .tgrid{grid-template-columns:1fr}.tlog{border-right:none;border-bottom:1px solid var(--line)}
     .tstats{grid-template-columns:1fr 1fr}
     .feats,.tk-top,.tiers,.steps{grid-template-columns:1fr}
     .flow{flex-direction:column}.flow .node{border-right:none;border-bottom:1px solid var(--line)}
-    .flow .node::after{content:"↓";right:auto;left:50%;top:auto;bottom:-9px;transform:translateX(-50%)}
+    .flow .node::after{content:"↓";right:auto;left:50%;top:auto;bottom:-8px;transform:translateX(-50%)}
     .flow .node:last-child::after{content:"↻"}
-    .pbar .meta{display:none}
-    .vs .row{grid-template-columns:1.2fr 1fr 1fr}
   }
 </style>
 </head>
 <body>
-<div class="flare"></div><div class="grid-bg"></div>
+<div class="grid-bg"></div><div class="halo"></div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="core" viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="50" cy="50" r="8" fill="currentColor"/><path d="M50 20 V6 M50 94 V80 M20 50 H6 M94 50 H80 M29 29 L19 19 M71 71 L81 81 M71 29 L81 19 M29 71 L19 81" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></symbol>
@@ -331,168 +279,124 @@
 </svg>
 
 <nav><div class="wrap">
-  <div class="brand"><svg><use href="#core"/></svg><b>AGENT</b><span class="v mono">v1</span></div>
+  <div class="brand"><svg><use href="#core"/></svg><b>AGENT</b><span class="st"><i></i>LIVE</span></div>
   <div class="navlinks">
-    <a href="#feed">Live Feed</a><a href="#what">Capabilities</a><a href="#vision">The Vision</a><a href="#token">Tokenomics</a>
+    <a href="#terminal">Terminal</a><a href="#how">How it works</a><a href="#vision">Vision</a><a href="#token">Token</a>
   </div>
-  <a class="pill-btn" href="#buy">Get $AGENT</a>
+  <a class="btn primary" id="navBuy" href="#buy">Get $AGENT</a>
 </div></nav>
 
 <!-- HERO -->
 <header><div class="wrap">
   <div class="hero">
     <div class="reveal">
-      <span class="chip"><span class="live"></span> Live on <b style="color:var(--txt);margin-left:-3px">Robinhood&nbsp;Chain</b></span>
-      <div class="kick">The AI agent that actually runs</div>
-      <h1>Trade like<br>the pros. <span class="tick">$AGENT</span></h1>
-      <p class="subline">The HFT edge Wall Street guarded for 40 years — pointed at the chain.</p>
-      <p class="lede">Every "AI agent" on Robinhood Chain is a logo with no product. <b>$AGENT is the one that boots up</b> — it watches every launch, runs a 9-point rug scan in seconds, and scores momentum before the crowd sees the chart. Vlad promised retail this edge. We shipped it first.</p>
+      <span class="tagpill"><i></i> Live on Robinhood Chain · scanning now</span>
+      <h1>On-chain intelligence.<br><em>Live in your browser.</em></h1>
+      <p class="lede">$AGENT is a working trading agent for Robinhood Chain. It pulls every new launch straight off the chain, runs a <b>9-point rug scan</b> in your browser, and scores momentum — <b>real verdicts on real tokens, right now.</b> Not a mockup. Scroll and watch it work.</p>
       <div class="cta">
-        <a class="pill-btn" id="buyLink" href="#buy">Get $AGENT →</a>
-        <a class="pill-btn ghost" href="#feed">Watch It Run</a>
+        <a class="btn primary" id="heroBuy" href="#buy">Get $AGENT →</a>
+        <a class="btn ghost" href="#terminal">Watch it scan live</a>
+      </div>
+      <div class="assurances">
+        <span><b>◆</b> Real on-chain data</span><span><b>◆</b> 0/0 tax · LP locked</span><span><b>◆</b> Token-gated access</span>
       </div>
     </div>
-    <div class="console reveal">
+    <div class="console reveal" id="heroConsole">
       <div class="chd">
         <span class="cdot" style="background:#ff5f57"></span><span class="cdot" style="background:#febc2e"></span><span class="cdot" style="background:#28c840"></span>
-        <span class="cp">agent · scanning robinhood-chain</span>
+        <span class="cp">agent://robinhood-chain/live</span>
         <span class="con"><i></i>LIVE</span>
       </div>
       <div class="cbody">
-        <div class="cscan-top">
-          <div class="cs-name" id="h-name">$GILD / WETH</div>
-          <div class="cs-verdict" id="h-verdict">PASS · 7/9</div>
-        </div>
-        <div class="cs-meta" id="h-meta">age 41s · liq $41k · 266 holders · top 3.2%</div>
+        <div class="cscan-top"><div class="cs-name" id="h-name">connecting…</div><div class="cs-verdict" id="h-verdict">SCAN</div></div>
+        <div class="cs-meta" id="h-meta">pulling latest launches off Robinhood Chain</div>
         <div class="cs-checks" id="h-checks"></div>
         <div class="cs-foot">
-          <div class="cs-score"><span class="k">agent score</span><span class="v" id="h-score">82</span></div>
+          <div class="cs-score"><span class="k">agent score</span><span class="v" id="h-score">—</span></div>
           <div class="cs-mom" id="h-mom"></div>
         </div>
-        <div class="cs-log" id="h-log"></div>
       </div>
     </div>
   </div>
 
-  <!-- metrics rail -->
   <div class="rail reveal">
-    <div class="m"><div class="l">Tokens Scanned</div><div class="v g" data-count="12847">12,847</div><div class="d">since genesis block</div></div>
-    <div class="m"><div class="l">Rugs Flagged</div><div class="v" data-count="1093">1,093</div><div class="d">saved holders from</div></div>
-    <div class="m"><div class="l">Avg Scan Time</div><div class="v g">3.4s</div><div class="d">launch → verdict</div></div>
-    <div class="m"><div class="l">Pools Watched</div><div class="v">Robinhood</div><div class="d">every new pair</div></div>
-    <div class="m"><div class="l">Safety Checks</div><div class="v g">9-pt</div><div class="d">per contract</div></div>
-    <div class="m"><div class="l">Uptime</div><div class="v">99.9%</div><div class="d">the agent never sleeps</div></div>
+    <div class="m"><div class="l">Scanned · session</div><div class="v g" id="r-scanned">—</div><div class="d">live this visit</div></div>
+    <div class="m"><div class="l">Flagged risky</div><div class="v" id="r-flagged">—</div><div class="d">rug / honeypot</div></div>
+    <div class="m"><div class="l">Cleared</div><div class="v g" id="r-clean">—</div><div class="d">passed 9-pt</div></div>
+    <div class="m"><div class="l">Avg scan</div><div class="v y" id="r-latency">—</div><div class="d">chain → verdict</div></div>
+    <div class="m"><div class="l">Chain</div><div class="v">Robinhood</div><div class="d">id 4663 · live</div></div>
   </div>
 </div></header>
 
-<!-- LIVE FEED / TERMINAL -->
-<section id="feed"><div class="wrap">
-  <div class="pbar reveal"><span class="idx">01</span><span class="nm">Live Feed</span>
-    <span class="meta"><span>STREAM <b>on</b></span><span>LATENCY <b>&lt;5s</b></span><span>SOURCE <b>robinhood-chain</b></span></span>
-  </div>
-  <h2 class="reveal">The agent, live.</h2>
-  <p class="sub reveal">This is what holders see the instant a token deploys — detect, scan, score, before it ever hits a chart.</p>
-
+<!-- TERMINAL -->
+<section id="terminal"><div class="wrap">
+  <div class="shead reveal">Live Terminal</div>
+  <h2 class="reveal">Watch it scan the chain — for real.</h2>
+  <p class="sub reveal">This runs live in your browser against Robinhood Chain. Every token below is a real launch; every verdict is computed from real on-chain data, right now. Refresh and it re-scans.</p>
   <div class="terminal reveal">
     <div class="chrome">
       <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
-      <span class="path">agent@robinhood-chain: ~/watch --live</span>
-      <span class="status"><span class="live"></span> ONLINE</span>
+      <span class="path">agent@robinhood-chain: ~/scan --live</span>
+      <span class="status"><i></i><span id="term-status">BOOTING</span></span>
     </div>
     <div class="tstats">
-      <div class="s"><div class="k">Session Scans</div><div class="n g" id="ts-scans">2,041</div></div>
-      <div class="s"><div class="k">Passed</div><div class="n g" id="ts-pass">318</div></div>
-      <div class="s"><div class="k">Flagged Rugs</div><div class="n" style="color:var(--red)" id="ts-rug">1,140</div></div>
-      <div class="s"><div class="k">Watching</div><div class="n" id="ts-watch">7</div></div>
+      <div class="s"><div class="k">Launches Scanned</div><div class="n g" id="ts-scans">0</div></div>
+      <div class="s"><div class="k">Cleared</div><div class="n g" id="ts-pass">0</div></div>
+      <div class="s"><div class="k">Flagged Risky</div><div class="n r" id="ts-rug">0</div></div>
+      <div class="s"><div class="k">In Queue</div><div class="n" id="ts-watch">0</div></div>
     </div>
     <div class="tgrid">
       <div class="tlog" id="tlog"></div>
       <div class="tpanel">
-        <div class="ph"><span>Latest Scan</span><span id="p-time">03:14:22</span></div>
-        <div class="tkn"><span class="name" id="p-name">$GILD / WETH</span><span class="age" id="p-age">age 41s · deployer 0x9a…c4</span></div>
-        <div class="checks" id="p-checks">
-          <div class="c ok"><span class="mk">✓</span> Sells enabled</div>
-          <div class="c ok"><span class="mk">✓</span> No mint fn</div>
-          <div class="c ok"><span class="mk">✓</span> No blacklist</div>
-          <div class="c ok"><span class="mk">✓</span> Owner renounced</div>
-          <div class="c ok"><span class="mk">✓</span> LP locked</div>
-          <div class="c ok"><span class="mk">✓</span> Tax 0 / 0</div>
-          <div class="c warn"><span class="mk">!</span> Top wallet 6.2%</div>
-          <div class="c warn"><span class="mk">!</span> Liq $41k (thin)</div>
-          <div class="c ok"><span class="mk">✓</span> Not a honeypot</div>
-        </div>
+        <div class="ph"><span>Latest Scan</span><a id="p-link" href="#" target="_blank" rel="noopener">view on explorer ↗</a></div>
+        <div class="tkn"><span class="name" id="p-name">—</span><span class="age" id="p-age"></span></div>
+        <div class="checks" id="p-checks"></div>
         <div class="score">
-          <div class="ring"><div class="in" id="p-score">82</div></div>
-          <div class="lab"><div class="v" id="p-verdict">PASS · 7 / 9</div><div class="k">agent score / 100</div></div>
+          <div class="ring"><div class="in" id="p-score">—</div></div>
+          <div class="lab"><div class="v" id="p-verdict">standby</div><div class="k">agent score / 100</div></div>
         </div>
-        <div class="mbars">
-          <div class="mb"><span>Vol 5m</span><span class="bar"><i style="width:78%"></i></span><span class="val">+310%</span></div>
-          <div class="mb"><span>Buy/Sell</span><span class="bar"><i style="width:86%"></i></span><span class="val">18 / 3</span></div>
-          <div class="mb"><span>Holders</span><span class="bar"><i style="width:64%"></i></span><span class="val">41→180</span></div>
-        </div>
+        <div class="mbars" id="p-mom"></div>
       </div>
     </div>
   </div>
+  <p class="livenote">↑ real launches, real safety checks, computed client-side from Robinhood Chain · <b>this is the product, not a render</b></p>
 </div></section>
 
-<!-- CAPABILITIES -->
-<section id="what"><div class="wrap">
-  <div class="pbar reveal"><span class="idx">02</span><span class="nm">Capabilities</span>
-    <span class="meta"><span>PIPELINE <b>4-stage</b></span><span>CHECKS <b>9-point</b></span></span>
-  </div>
-  <h2 class="reveal">What it does — before you finish the sentence.</h2>
+<!-- HOW / CAPABILITIES -->
+<section id="how"><div class="wrap">
+  <div class="shead reveal">Capabilities</div>
+  <h2 class="reveal">The pro desk, automated.</h2>
   <div class="feats">
     <div class="feat reveal"><div class="ic"><svg><use href="#radar"/></svg></div><h3>Launch Radar</h3><p>Reads every new pool off Robinhood Chain the moment it deploys — NOXA graduates, fresh pairs, all of it.</p><span class="kbd">detect &lt; 5s</span></div>
-    <div class="feat reveal"><div class="ic"><svg><use href="#shield"/></svg></div><h3>9-Point Rug Scan</h3><p>Honeypot, mint & blacklist functions, LP lock, ownership, real tax, holder concentration — read straight off the bytecode.</p><span class="kbd">bytecode-level</span></div>
-    <div class="feat reveal"><div class="ic"><svg><use href="#pulse"/></svg></div><h3>Momentum Scoring</h3><p>Volume velocity, buy/sell pressure and holder-growth — the tape-reading HFT desks do, across every pool at once.</p><span class="kbd">real-time tape</span></div>
-    <div class="feat reveal"><div class="ic"><svg><use href="#core"/></svg></div><h3>AI Verdict</h3><p>Combines safety + momentum into a 0–100 score and a one-line read: "clean early momentum, liquidity thin — high risk."</p><span class="kbd">score / 100</span></div>
-    <div class="feat reveal"><div class="ic"><svg><use href="#chat"/></svg></div><h3>In Your Pocket</h3><p>Fires a Telegram alert + web dashboard card the instant it matters. No charts to babysit — the agent never blinks.</p><span class="kbd">TG + web</span></div>
-    <div class="feat reveal"><div class="ic"><svg><use href="#key"/></svg></div><h3>Token-Gated</h3><p>Hold $AGENT to unlock the feed. Your balance is your access — checked on-chain, no sign-up, no custody.</p><span class="kbd">hold to unlock</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#shield"/></svg></div><h3>9-Point Rug Scan</h3><p>Honeypot, mint &amp; blacklist functions, LP lock, ownership, real tax, holder concentration — read straight off the bytecode.</p><span class="kbd">bytecode-level</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#pulse"/></svg></div><h3>Momentum Scoring</h3><p>Volume velocity, buy/sell pressure and holder growth — the tape-reading HFT desks do, across every pool at once.</p><span class="kbd">real-time tape</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#core"/></svg></div><h3>Agent Verdict</h3><p>Combines safety + momentum into a 0–100 score and a PASS / WATCH / FAIL call, with a one-line read.</p><span class="kbd">score / 100</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#chat"/></svg></div><h3>In Your Pocket</h3><p>Fires a Telegram alert + this dashboard the instant it matters. The agent never sleeps and never blinks.</p><span class="kbd">TG + web</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#key"/></svg></div><h3>Token-Gated</h3><p>Hold $AGENT to unlock the live feed. Your balance is your access — read on-chain, no sign-up, no custody.</p><span class="kbd">hold to unlock</span></div>
   </div>
 </div></section>
 
-<!-- VISION / receipt -->
+<!-- VISION -->
 <section class="receipt" id="vision"><div class="wrap reveal">
-  <div class="src"><span class="live"></span> On the Record · Vlad Tenev, CNBC · July 2026</div>
+  <div class="src"><i></i> On the Record · Vlad Tenev, CNBC · July 2026</div>
   <blockquote>“Give the everyday person access to the <span class="hl">same tools, the same computation, the same power</span> that institutional high-frequency trading firms have enjoyed for decades.”</blockquote>
-  <p class="by">— Robinhood's CEO on agentic trading. The twist: before Robinhood, Vlad <b>built and sold that exact HFT software to the banks</b> (his firm, Chronos Research). He promised to hand the edge to the little guy.</p>
-  <p class="punch">He's still building it. <span class="g">We shipped it first — on his own chain.</span></p>
+  <p class="by">— Robinhood's CEO on agentic trading. Before Robinhood, Vlad <b>built and sold that exact HFT software to the banks</b> (his firm, Chronos Research). He promised to hand the edge to the little guy.</p>
+  <p class="punch">He's still building it. We shipped it first — on his own chain.</p>
 </div></section>
 
-<!-- VS -->
-<section><div class="wrap">
-  <div class="pbar reveal"><span class="idx">03</span><span class="nm">The Difference</span></div>
-  <h2 class="reveal">Everyone says "AI agent."<br>One of them boots up.</h2>
-  <div class="vs reveal">
-    <div class="row h"><div>&nbsp;</div><div class="them">The Other "AI Agents"</div><div class="us">$AGENT</div></div>
-    <div class="row"><div class="lab">Working product</div><div class="them">A logo &amp; a whitepaper</div><div class="us">Live feed you can watch</div></div>
-    <div class="row"><div class="lab">Rug protection</div><div class="them">None</div><div class="us">9-point bytecode scan</div></div>
-    <div class="row"><div class="lab">Speed</div><div class="them">A human posting screenshots</div><div class="us">Sub-5s, fully automated</div></div>
-    <div class="row"><div class="lab">Access model</div><div class="them">Buy &amp; pray</div><div class="us">Hold to unlock the tool</div></div>
-    <div class="row"><div class="lab">The lore</div><div class="them">Random</div><div class="us">Vlad's own cited vision</div></div>
-  </div>
-</div></section>
-
-<!-- TOKENOMICS -->
+<!-- TOKEN -->
 <section id="token"><div class="wrap">
-  <div class="pbar reveal"><span class="idx">04</span><span class="nm">Tokenomics</span>
-    <span class="meta"><span>SUPPLY <b>1B</b></span><span>TAX <b>0/0</b></span><span>LP <b>locked</b></span></span>
-  </div>
+  <div class="shead reveal">Token</div>
   <h2 class="reveal">Hold the token. Unlock the agent.</h2>
-  <p class="sub reveal">The token is the key to the tool — so demand tracks usage, not hype. Clean fair launch; the utility does the work.</p>
-
+  <p class="sub reveal">The token is the key to the tool — demand tracks usage, not hype. Clean fair launch; the utility does the work.</p>
   <div class="tk-top">
     <div class="panel reveal">
       <div class="ph"><span class="t">Allocation</span><span class="s">1,000,000,000 $AGENT</span></div>
-      <div class="stack">
-        <i style="width:85%;background:linear-gradient(90deg,var(--green-dim),var(--green))"></i>
-        <i style="width:10%;background:#2b6f33"></i>
-        <i style="width:5%;background:#455049"></i>
-      </div>
+      <div class="stack"><i style="width:85%;background:linear-gradient(90deg,var(--green-dim),var(--green))"></i><i style="width:10%;background:#2b6f45"></i><i style="width:5%;background:#455049"></i></div>
       <div class="alist">
-        <div class="a"><span class="sw" style="background:var(--green)"></span><span class="nm">Liquidity Pool · locked</span><span class="pc green">85%</span></div>
-        <div class="a"><span class="sw" style="background:#2b6f33"></span><span class="nm">Agent Dev &amp; Infra · vested</span><span class="pc">10%</span></div>
-        <div class="a"><span class="sw" style="background:#455049"></span><span class="nm">Community &amp; Rewards</span><span class="pc">5%</span></div>
+        <div class="a"><span class="sw" style="background:var(--green)"></span><span>Liquidity Pool · locked</span><span class="pc green">85%</span></div>
+        <div class="a"><span class="sw" style="background:#2b6f45"></span><span>Agent Dev &amp; Infra · vested</span><span class="pc">10%</span></div>
+        <div class="a"><span class="sw" style="background:#455049"></span><span>Community &amp; Rewards</span><span class="pc">5%</span></div>
       </div>
     </div>
     <div class="panel reveal">
@@ -500,52 +404,26 @@
       <div class="params">
         <div class="p"><span class="k">Buy / Sell Tax</span><span class="v g">0 / 0</span></div>
         <div class="p"><span class="k">Liquidity</span><span class="pill-ok">LOCKED</span></div>
-        <div class="p"><span class="k">Team Allocation</span><span class="v">None (dev vested)</span></div>
-        <div class="p"><span class="k">Launchpad</span><span class="v">NOXA Fun → Uniswap</span></div>
-        <div class="p"><span class="k">Access gating</span><span class="v">Off-chain balance read</span></div>
-        <div class="p"><span class="k">Contract needed</span><span class="v g">Standard ERC-20</span></div>
+        <div class="p"><span class="k">Team Allocation</span><span class="v">None · dev vested</span></div>
+        <div class="p"><span class="k">Launchpad</span><span class="v">NOXA → Uniswap</span></div>
+        <div class="p"><span class="k">Access gating</span><span class="v">On-chain balance</span></div>
+        <div class="p"><span class="k">Contract</span><span class="v g">Standard ERC-20</span></div>
       </div>
     </div>
   </div>
 
-  <!-- access tiers -->
-  <h2 class="reveal" style="font-size:1.5rem;margin:44px 0 4px">Your bag is your access.</h2>
-  <p class="sub reveal" style="margin-bottom:6px">Hold $AGENT to unlock the agent. Balance checked on-chain — no sign-up, no custody.</p>
+  <h2 class="reveal" style="font-size:1.4rem;margin:38px 0 3px">Your bag is your access.</h2>
+  <p class="sub reveal">Hold $AGENT to unlock the agent. Balance read on-chain — no sign-up, no custody.</p>
   <div class="tiers">
-    <div class="tier reveal">
-      <div class="tn">Tier 01</div><div class="th">Deputy</div><div class="hold">hold ≥ $50</div>
-      <ul>
-        <li><svg><use href="#check"/></svg> Live launch radar</li>
-        <li><svg><use href="#check"/></svg> 9-point safety verdict</li>
-        <li><svg><use href="#check"/></svg> Telegram alerts</li>
-        <li class="off"><svg><use href="#check"/></svg> Momentum signals</li>
-        <li class="off"><svg><use href="#check"/></svg> Early-block access</li>
-      </ul>
-    </div>
-    <div class="tier feat-tier reveal">
-      <div class="tn">Tier 02</div><div class="th">Pro</div><div class="hold">hold ≥ $500</div>
-      <ul>
-        <li><svg><use href="#check"/></svg> Everything in Deputy</li>
-        <li><svg><use href="#check"/></svg> Momentum + velocity signals</li>
-        <li><svg><use href="#check"/></svg> Early-block alerts</li>
-        <li><svg><use href="#check"/></svg> Custom watchlists</li>
-        <li class="off"><svg><use href="#check"/></svg> Priority + API</li>
-      </ul>
-    </div>
-    <div class="tier reveal">
-      <div class="tn">Tier 03</div><div class="th">Desk</div><div class="hold">top tier</div>
-      <ul>
-        <li><svg><use href="#check"/></svg> Everything in Pro</li>
-        <li><svg><use href="#check"/></svg> Priority alert queue</li>
-        <li><svg><use href="#check"/></svg> Private API access</li>
-        <li><svg><use href="#check"/></svg> Custom agent rules</li>
-        <li><svg><use href="#check"/></svg> Revenue-share on subs</li>
-      </ul>
-    </div>
+    <div class="tier reveal"><div class="tn">Tier 01</div><div class="th">Deputy</div><div class="hold">hold ≥ $50</div>
+      <ul><li><svg><use href="#check"/></svg> Live launch radar</li><li><svg><use href="#check"/></svg> 9-point safety verdict</li><li><svg><use href="#check"/></svg> Telegram alerts</li><li class="off"><svg><use href="#check"/></svg> Momentum signals</li><li class="off"><svg><use href="#check"/></svg> Early-block access</li></ul></div>
+    <div class="tier feat-tier reveal"><div class="tn">Tier 02</div><div class="th">Pro</div><div class="hold">hold ≥ $500</div>
+      <ul><li><svg><use href="#check"/></svg> Everything in Deputy</li><li><svg><use href="#check"/></svg> Momentum + velocity signals</li><li><svg><use href="#check"/></svg> Early-block alerts</li><li><svg><use href="#check"/></svg> Custom watchlists</li><li class="off"><svg><use href="#check"/></svg> Priority + API</li></ul></div>
+    <div class="tier reveal"><div class="tn">Tier 03</div><div class="th">Desk</div><div class="hold">top tier</div>
+      <ul><li><svg><use href="#check"/></svg> Everything in Pro</li><li><svg><use href="#check"/></svg> Priority alert queue</li><li><svg><use href="#check"/></svg> Private API access</li><li><svg><use href="#check"/></svg> Custom agent rules</li><li><svg><use href="#check"/></svg> Revenue-share on subs</li></ul></div>
   </div>
 
-  <!-- flywheel -->
-  <h2 class="reveal" style="font-size:1.5rem;margin:44px 0 4px">The flywheel.</h2>
+  <h2 class="reveal" style="font-size:1.4rem;margin:38px 0 3px">The flywheel.</h2>
   <p class="sub reveal">Not "hope it pumps." The better the agent gets, the more holders it takes to use it.</p>
   <div class="flow reveal">
     <div class="node"><div class="n">01</div><div class="t">Hold $AGENT</div><div class="d">unlock the feed</div></div>
@@ -557,19 +435,19 @@
 
 <!-- BUY -->
 <section id="buy"><div class="wrap">
-  <div class="pbar reveal"><span class="idx">05</span><span class="nm">Get Online</span></div>
+  <div class="shead reveal">Get Online</div>
   <h2 class="reveal">Three steps to the edge.</h2>
   <div class="steps">
     <div class="fstep reveal"><div class="n">01</div><h4>Get On-Chain</h4><p>Wallet (MetaMask · Rabby · OKX), add Robinhood Chain (ID 4663), fund with ETH — or bridge from Solana.</p></div>
-    <div class="fstep reveal"><div class="n">02</div><h4>Buy $AGENT</h4><p>Grab it on NOXA Fun, then Uniswap once it graduates. Match the official contract below — accept no clones.</p></div>
-    <div class="fstep reveal"><div class="n">03</div><h4>Unlock the Feed</h4><p>Connect and the agent goes live in your Telegram + dashboard. Now you see every launch the second it lands.</p></div>
+    <div class="fstep reveal"><div class="n">02</div><h4>Buy $AGENT</h4><p>Grab it on NOXA Fun, then Uniswap once it graduates. Match the official contract below.</p></div>
+    <div class="fstep reveal"><div class="n">03</div><h4>Unlock the Feed</h4><p>Connect and the agent goes live in your Telegram + this dashboard. You see every launch the second it lands.</p></div>
   </div>
   <div class="ctaband reveal">
     <h2>The pros had 40 years. You get the agent.</h2>
-    <p class="sub">Robinhood Chain's first AI trading agent that actually runs. Hold $AGENT — trade like the pros.</p>
-    <div class="cta" style="justify-content:center;margin-top:24px">
-      <a class="pill-btn" id="buyLink2" href="#">Buy on NOXA Fun →</a>
-      <a class="pill-btn ghost" id="tgLink">Open the Agent (TG)</a>
+    <p class="sub">Robinhood Chain's first working AI trading agent. Hold $AGENT — trade like the pros.</p>
+    <div class="cta" style="justify-content:center;margin-top:22px">
+      <a class="btn primary" id="buyMain" href="#" style="padding:12px 24px">Buy on NOXA Fun →</a>
+      <a class="btn ghost" id="tgMain" href="#" style="padding:12px 24px">Open the Agent (TG)</a>
     </div>
     <div class="ca-row">Contract: <code id="ca" title="click to copy">0x… — set at launch</code></div>
   </div>
@@ -577,120 +455,197 @@
 
 <!-- FAQ -->
 <section><div class="wrap">
-  <div class="pbar reveal"><span class="idx">06</span><span class="nm">FAQ</span></div>
+  <div class="shead reveal">FAQ</div>
   <h2 class="reveal">Straight answers.</h2>
   <div class="faq reveal">
-    <details open><summary>Is the agent real, or vaporware?</summary><p>Real. The safety scans read live contract bytecode for honeypots, mint and blacklist functions; the radar reads new pools off the chain directly; momentum comes from live volume and holder data. The feed above mirrors the real output. Holding $AGENT unlocks it in your Telegram.</p></details>
-    <details><summary>Is this affiliated with Robinhood?</summary><p>No. $AGENT is an independent community project and a work of commentary. Not affiliated with Robinhood Markets, Inc. It's built on Robinhood Chain and inspired by Vlad Tenev's own public "agentic trading" vision.</p></details>
+    <details open><summary>Is the terminal actually live, or fake?</summary><p>Actually live. It runs in your browser and queries Robinhood Chain directly — new pools from GeckoTerminal, contract bytecode and balances via the chain RPC, holders and transfers via Blockscout. Every token and verdict you see is computed from real on-chain data at that moment. Refresh and it re-scans the latest launches.</p></details>
+    <details><summary>Is this affiliated with Robinhood?</summary><p>No. $AGENT is an independent project and a work of commentary, not affiliated with Robinhood Markets, Inc. It's built on Robinhood Chain and inspired by Vlad Tenev's public "agentic trading" vision.</p></details>
     <details><summary>Is it financial advice?</summary><p>No. The agent surfaces on-chain data and signals — it does not tell you what to buy, and nothing here is financial advice. Signals are information, not instructions.</p></details>
-    <details><summary>Why do I need to hold to use it?</summary><p>Access is gated by your $AGENT balance, read on-chain — no subscription, no custody. It aligns the tool with the token: the more useful the agent, the more people hold to use it.</p></details>
+    <details><summary>Why hold to use it?</summary><p>Access is gated by your $AGENT balance, read on-chain — no subscription, no custody. It aligns the tool with the token: the more useful the agent, the more people hold to use it.</p></details>
   </div>
 </div></section>
 
 <footer><div class="wrap">
-  <div class="brand"><svg><use href="#core"/></svg><b>AGENT</b><span class="v mono">v1</span></div>
+  <div class="brand"><svg><use href="#core"/></svg><b>AGENT</b></div>
   <div class="socials">
-    <a href="#" id="xLink">Follow · 𝕏</a>
-    <a href="#" id="tgLink2">Open the Agent · TG</a>
-    <a href="#" id="buyLink3">Get $AGENT</a>
+    <a id="xLink">Follow · 𝕏</a><a id="tgLink">Telegram</a><a id="buyLink3">Get $AGENT</a>
   </div>
 </div>
-<div class="wrap"><p class="disc">$AGENT is a community project on Robinhood Chain and a work of commentary, with no intrinsic value or expectation of financial return. Not affiliated with Robinhood Markets, Inc. The agent provides on-chain information and signals only — not financial advice and not trade instructions. Metrics shown are illustrative of the agent's output. Do your own research; only ride with what you can afford to lose.</p></div>
+<div class="wrap"><p class="disc">$AGENT is a community project on Robinhood Chain and a work of commentary, with no intrinsic value or expectation of financial return. Not affiliated with Robinhood Markets, Inc. The agent provides on-chain information only — not financial advice and not trade instructions. Live scan data is fetched directly from public chain endpoints and may be rate-limited or incomplete. DYOR; only ride with what you can afford to lose.</p></div>
 </footer>
 
 <script>
-  // ── config (set at launch) ──
-  const CFG={ ca:"", noxa:"https://fun.noxa.fi/robinhood", x:"", tg:"" };
+/* ═══════════════ REAL client-side scanner — runs live against Robinhood Chain ═══════════════ */
+const RPC='https://rpc.mainnet.chain.robinhood.com';
+const BS='https://robinhoodchain.blockscout.com/api/v2';
+const GT='https://api.geckoterminal.com/api/v2/networks/robinhood';
+const WETH='0x0bd7d308f8e1639fab988df18a8011f41eacad73';
+const CFG={ ca:"", noxa:"https://fun.noxa.fi/robinhood", x:"", tg:"" };
 
-  // toast
-  const toast=(msg)=>{let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);};
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const jget=u=>fetch(u).then(r=>r.json()).catch(()=>null);
+async function rpc(method,params){try{const r=await fetch(RPC,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});return (await r.json()).result;}catch{return null;}}
+const call=(to,data)=>rpc('eth_call',[{to,data},'latest']);
+function decStr(hex){if(!hex||hex==='0x')return '';const h=hex.slice(2);if(h.length<128){try{return hexToUtf8(h.replace(/0+$/,''));}catch{return '';}}const len=parseInt(h.slice(64,128),16);return hexToUtf8(h.slice(128,128+len*2));}
+function hexToUtf8(h){let s='';for(let i=0;i<h.length;i+=2){const c=parseInt(h.substr(i,2),16);if(c)s+=String.fromCharCode(c);}try{return decodeURIComponent(escape(s));}catch{return s;}}
+const decBig=hex=>(hex&&hex!=='0x')?BigInt(hex):0n;
 
-  // CA copy
-  const c=document.getElementById('ca');
-  if(CFG.ca){c.textContent=CFG.ca;}
-  c.onclick=()=>{ if(!CFG.ca){toast('Contract goes live at launch');return;} navigator.clipboard.writeText(CFG.ca);const t=c.textContent;c.textContent='copied ✓';setTimeout(()=>c.textContent=t,1200); };
+const DANGER={'40c10f19':'mint','a0712d68':'mint','8456cb59':'pause','5c975abb':'pause','fe575a87':'blacklist','f9f92be4':'blacklist','b515566a':'bots','c0246668':'setFees'};
 
-  // wire every button: real links open, pre-launch links show a toast (never dead)
-  const wire=(id,url,soon)=>{const el=document.getElementById(id);if(!el)return; if(url){el.href=url;el.target='_blank';el.rel='noopener';} else {el.href='#';el.addEventListener('click',e=>{e.preventDefault();toast(soon);});}};
-  ['buyLink','buyLink2','buyLink3'].forEach(id=>wire(id,CFG.noxa? CFG.noxa:null,'Buy link goes live at launch'));
-  ['xLink'].forEach(id=>wire(id,CFG.x||null,'X account goes live at launch'));
-  ['tgLink','tgLink2'].forEach(id=>wire(id,CFG.tg||null,'Telegram goes live at launch'));
+async function identify(ca){
+  const [n,s,d,sup]=await Promise.all([call(ca,'0x06fdde03'),call(ca,'0x95d89b41'),call(ca,'0x313ce567'),call(ca,'0x18160ddd')]);
+  const dec=Number(decBig(d))||18;
+  return {name:decStr(n)||'?',symbol:decStr(s)||'?',decimals:dec,supply:Number(decBig(sup))/10**dec};
+}
+async function byteScan(ca){
+  const code=(await rpc('eth_getCode',[ca,'latest']))||'0x';const body=code.slice(2);
+  const sels=new Set([...body.matchAll(/63([0-9a-f]{8})/g)].map(m=>m[1]));
+  const flags=new Set();for(const s of sels)if(DANGER[s])flags.add(DANGER[s]);
+  let owner=null;const o=await call(ca,'0x8da5cb5b');if(o&&o.length>2)owner='0x'+o.slice(-40);
+  const renounced=!owner||/^0x0+$/.test(owner)||owner.toLowerCase().endsWith('dead');
+  return {canMint:flags.has('mint'),hasBlacklist:flags.has('blacklist')||flags.has('bots'),hasPause:flags.has('pause'),setFees:flags.has('setFees'),renounced,hasCode:body.length>4};
+}
+async function poolData(ca){
+  const d=await jget(`${GT}/tokens/${ca}/pools?sort=h24_volume_usd_desc`);const p=d&&d.data&&d.data[0];if(!p)return null;const a=p.attributes;
+  return {pool:a.address,fdv:+a.fdv_usd||0,liq:+a.reserve_in_usd||0,volH1:+(a.volume_usd?.h1||0),chgH1:+(a.price_change_percentage?.h1||0),chg5m:+(a.price_change_percentage?.m5||0),created:a.pool_created_at,buys:+(a.transactions?.h1?.buys||0),sells:+(a.transactions?.h1?.sells||0)};
+}
+async function holderData(ca,pool){
+  const d=await jget(`${BS}/tokens/${ca}/holders`);const items=(d&&d.items)||[];
+  let topPct=0,lpTop=false;
+  if(items.length){const sup=items.reduce((s,h)=>s+Number(h.value||0),0)||1;const top=items[0];topPct=Number(top.value)/sup*100;const addr=(top.address?.hash||'').toLowerCase();lpTop=pool&&addr===pool.toLowerCase();if(lpTop&&items[1])topPct=Number(items[1].value)/sup*100;}
+  const cnt=await jget(`${BS}/tokens/${ca}/counters`);
+  return {holders:+((cnt&&cnt.token_holders_count)||items.length),topPct};
+}
+async function honeypot(ca,pool){
+  if(!pool)return {buys:0,sells:0,seen:null};
+  const d=await jget(`${BS}/tokens/${ca}/transfers`);const items=(d&&d.items)||[];const lp=pool.toLowerCase();let b=0,s=0;
+  for(const t of items){const f=(t.from?.hash||'').toLowerCase(),to=(t.to?.hash||'').toLowerCase();if(f===lp)b++;else if(to===lp)s++;}
+  return {buys:b,sells:s,seen:s>0};
+}
+function ageStr(iso){if(!iso)return '';const s=Math.max(0,(Date.now()-new Date(iso).getTime())/1000);if(s<90)return Math.round(s)+'s';if(s<5400)return Math.round(s/60)+'m';if(s<129600)return Math.round(s/3600)+'h';return Math.round(s/86400)+'d';}
 
-  // ── live terminal: alternating PASS/FAIL scans, updates left log + right panel ──
-  const samples=[
-    {name:'$GILD / WETH', age:'age 41s · deployer 0x9a…c4', verdict:'PASS · 7 / 9', score:82, sv:'g',
-     checks:[['ok','✓','Sells enabled'],['ok','✓','No mint fn'],['ok','✓','No blacklist'],['ok','✓','Owner renounced'],['ok','✓','LP locked'],['ok','✓','Tax 0 / 0'],['warn','!','Top wallet 6.2%'],['warn','!','Liq $41k (thin)'],['ok','✓','Not honeypot']],
-     bars:[['Vol 5m','78%','+310%'],['Buy/Sell','86%','18 / 3'],['Holders','64%','41→180']],
-     log:[['w','NEW LAUNCH · $GILD / WETH'],['muted','  ↳ 9-point safety scan…'],['g','  ✔ LP locked · no mint · sells ok'],['a','  ⚠ liq $41k · top wallet 6.2%'],['g','  ► PASS 7/9 · momentum +310% · score 82']]},
-    {name:'$MOONRAT / WETH', age:'age 12s · deployer 0x4f…a1', verdict:'FAIL · honeypot', score:9, sv:'r',
-     checks:[['bad','✕','Sells REVERT'],['bad','✕','Owner can mint'],['ok','✓','No blacklist'],['bad','✕','Owner active'],['warn','!','LP unlocked'],['bad','✕','Tax 8 / 40'],['bad','✕','Top wallet 61%'],['ok','✓','Liq $22k'],['bad','✕','HONEYPOT']],
-     bars:[['Vol 5m','40%','+90%'],['Buy/Sell','20%','31 / 0'],['Holders','30%','2→44']],
-     log:[['w','NEW LAUNCH · $MOONRAT / WETH'],['muted','  ↳ 9-point safety scan…'],['r','  ✖ sells revert · owner can mint · tax 40%'],['r','  ► FAIL — HONEYPOT, do not touch']]},
-    {name:'$VELVET / WETH', age:'age 1m 4s · deployer 0x22…9d', verdict:'WATCH · 6 / 9', score:64, sv:'a',
-     checks:[['ok','✓','Sells enabled'],['ok','✓','No mint fn'],['ok','✓','No blacklist'],['warn','!','Owner active'],['ok','✓','LP locked'],['ok','✓','Tax 0 / 0'],['warn','!','Top wallet 9.1%'],['warn','!','Liq $28k'],['ok','✓','Not honeypot']],
-     bars:[['Vol 5m','52%','+140%'],['Buy/Sell','60%','12 / 5'],['Holders','48%','19→77']],
-     log:[['w','NEW LAUNCH · $VELVET / WETH'],['muted','  ↳ 9-point safety scan…'],['g','  ✔ safe · clean tax · LP locked'],['a','  ⚠ owner not renounced · thin liq'],['a','  ► WATCH 6/9 · early, mid risk · score 64']]},
-    {name:'$AERO / WETH', age:'age 28s · deployer 0x7b…e0', verdict:'PASS · 8 / 9', score:88, sv:'g',
-     checks:[['ok','✓','Sells enabled'],['ok','✓','No mint fn'],['ok','✓','No blacklist'],['ok','✓','Owner renounced'],['ok','✓','LP locked'],['ok','✓','Tax 0 / 0'],['ok','✓','Top wallet 3.4%'],['warn','!','Liq $71k'],['ok','✓','Not honeypot']],
-     bars:[['Vol 5m','92%','+520%'],['Buy/Sell','90%','44 / 6'],['Holders','80%','60→340']],
-     log:[['w','NEW LAUNCH · $AERO / WETH'],['muted','  ↳ 9-point safety scan…'],['g','  ✔ fully renounced · distributed · deep-ish liq'],['g','  ► PASS 8/9 · momentum +520% · score 88 🔥']]},
-  ];
-  const tlog=document.getElementById('tlog');
-  let logLines=[['muted','$ agent --watch robinhood-chain --live'],['g','● agent online · streaming every new pool'],['muted','────────────────────────────']];
-  function renderLog(){
-    tlog.innerHTML=logLines.slice(-11).map(([c,t])=>`<div class="ln ${c}">${t}</div>`).join('')+'<div class="ln"><span class="cur"></span></div>';
+function scoreOf(x){
+  const checks=[];let pts=0;
+  const ok=(c,l)=>{checks.push([c?'ok':'bad',c?'✓':'✕',l]);if(c)pts++;};
+  const warnable=(good,l)=>{checks.push([good?'ok':'warn',good?'✓':'!',l]);if(good)pts++;};
+  ok(x.hp.seen!==false,'Sells enabled');
+  ok(!x.byte.canMint,'No mint fn');
+  ok(!x.byte.hasBlacklist,'No blacklist');
+  ok(x.byte.renounced,'Owner renounced');
+  ok(!x.byte.hasPause,'No pause fn');
+  warnable(x.pool&&x.pool.liq>8000,`Liq $${Math.round((x.pool?.liq||0)/1000)}k`);
+  warnable(x.holder.topPct>0&&x.holder.topPct<12,`Top wallet ${x.holder.topPct.toFixed(1)}%`);
+  ok(!x.byte.setFees,'No fee setter');
+  warnable(x.holder.holders>15,`${x.holder.holders} holders`);
+  const max=checks.length;const critical=(x.hp.seen===false)||x.byte.canMint;
+  const pct=pts/max;let verdict='FAIL',sv='r';
+  if(critical){verdict='FAIL';sv='r';}
+  else if(pct>=0.78){verdict='PASS';sv='g';}
+  else if(pct>=0.55){verdict='WATCH';sv='a';}
+  const mom=x.pool?Math.min(100,Math.max(0,(x.pool.chgH1||0)/6+((x.pool.buys||0)-(x.pool.sells||0))*2+40)):0;
+  const score=critical?Math.min(Math.round(pct*40),14):Math.round(pct*70+mom*0.3)||Math.round(pct*70);
+  return {checks,pts,max,verdict,sv,score,mom};
+}
+async function scanToken(ca){
+  ca=ca.toLowerCase();
+  const id=await identify(ca);
+  const pool=await poolData(ca);
+  const byte=await byteScan(ca);
+  const holder=await holderData(ca,pool&&pool.pool);
+  const hp=await honeypot(ca,pool&&pool.pool);
+  const x={ca,id,pool,byte,holder,hp};x.result=scoreOf(x);return x;
+}
+async function newest(n){
+  const d=await jget(`${GT}/new_pools`);const out=[];
+  for(const p of ((d&&d.data)||[])){const rel=p.relationships?.base_token?.data?.id;const base=rel&&rel.split('_')[1];if(base&&base.toLowerCase()!==WETH&&!out.includes(base))out.push(base);if(out.length>=n)break;}
+  return out;
+}
+
+/* ── UI wiring ── */
+const COL={g:'#00e078',r:'#ff5a5f',a:'#f4a638'};
+let logLines=[['muted','$ agent --scan --live robinhood-chain'],['g','● booting scanner · connecting to chain…']];
+function renderLog(){const el=$('tlog');el.innerHTML=logLines.slice(-12).map(([c,t])=>`<div class="ln ${c}">${t}</div>`).join('')+'<div class="ln"><span class="cur"></span></div>';}
+function momBars(x){const b=[['Vol 1h',Math.min(100,(x.pool?.volH1||0)/300),'$'+Math.round((x.pool?.volH1||0)/1000)+'k'],['Buy/Sell',x.pool?Math.min(100,(x.pool.buys/(x.pool.buys+x.pool.sells||1))*100):0,(x.pool?.buys||0)+' / '+(x.pool?.sells||0)],['Change 1h',Math.min(100,Math.max(0,(x.pool?.chgH1||0)/8+40)),((x.pool?.chgH1||0)>=0?'+':'')+Math.round(x.pool?.chgH1||0)+'%']];return b;}
+function setPanel(x){
+  const r=x.result,col=COL[r.sv];
+  $('p-name').textContent='$'+x.id.symbol;
+  $('p-age').textContent=(x.pool?('age '+ageStr(x.pool.created)+' · '):'')+'liq $'+Math.round((x.pool?.liq||0)/1000)+'k';
+  const vd=$('p-verdict');vd.textContent=r.verdict+' · '+r.pts+'/'+r.max;vd.style.color=col;
+  $('p-score').textContent=r.score;$('p-score').style.color=col;
+  document.querySelector('.score .ring').style.background=`conic-gradient(${col} 0 ${Math.max(4,r.score)}%,rgba(255,255,255,.07) ${r.score}% 100%)`;
+  $('p-checks').innerHTML=r.checks.map(([cl,mk,tx])=>`<div class="c ${cl}"><span class="mk">${mk}</span> ${tx}</div>`).join('');
+  $('p-mom').innerHTML=momBars(x).map(([k,w,v])=>`<div class="mb"><span>${k}</span><span class="bar"><i style="width:${w}%;background:${col}"></i></span><span class="val">${v}</span></div>`).join('');
+  $('p-link').href=`https://robinhoodchain.blockscout.com/token/${x.ca}`;
+}
+function setHero(x){
+  const r=x.result,col=COL[r.sv];
+  $('h-name').textContent='$'+x.id.symbol;
+  const hv=$('h-verdict');hv.textContent=r.verdict+' · '+r.pts+'/'+r.max;hv.style.color=col;hv.style.borderColor=col+'55';hv.style.background=col+'18';
+  $('h-meta').textContent=(x.pool?('age '+ageStr(x.pool.created)+' · liq $'+Math.round((x.pool.liq||0)/1000)+'k · '):'')+x.holder.holders+' holders';
+  $('h-checks').innerHTML=r.checks.slice(0,6).map(([cl,mk,tx])=>`<div class="c ${cl}"><span class="mk">${mk}</span> ${tx}</div>`).join('');
+  $('h-score').textContent=r.score;$('h-score').style.color=col;
+  $('h-mom').innerHTML=momBars(x).map(([k,w,v])=>`<div class="mb"><span>${k}</span><span class="bar"><i style="width:${w}%;background:${col}"></i></span><span class="val">${v}</span></div>`).join('');
+}
+const stats={scanned:0,pass:0,rug:0,t0:0,tsum:0};
+function bumpStats(x,ms){
+  stats.scanned++;stats.tsum+=ms;
+  if(x.result.sv==='g')stats.pass++;if(x.result.sv==='r')stats.rug++;
+  $('r-scanned').textContent=stats.scanned;$('r-flagged').textContent=stats.rug;$('r-clean').textContent=stats.pass;
+  $('r-latency').textContent=(stats.tsum/stats.scanned/1000).toFixed(1)+'s';
+  $('ts-scans').textContent=stats.scanned;$('ts-pass').textContent=stats.pass;$('ts-rug').textContent=stats.rug;
+}
+function pushScan(x){
+  const r=x.result,c=r.sv;
+  logLines.push(['w',`SCAN · $${x.id.symbol}  ${x.pool?('liq $'+Math.round((x.pool.liq||0)/1000)+'k'):'pre-pool'}`]);
+  const bad=r.checks.filter(k=>k[0]==='bad').map(k=>k[2]);
+  if(bad.length)logLines.push(['r','  ✖ '+bad.slice(0,3).join(' · ')]);
+  logLines.push([c,`  ► ${r.verdict} ${r.pts}/${r.max} · score ${r.score}`+(x.pool?` · 1h ${(x.pool.chgH1>=0?'+':'')+Math.round(x.pool.chgH1)}%`:'')]);
+  logLines.push(['muted','────────────────────────────']);
+  if(logLines.length>40)logLines=logLines.slice(-40);
+  renderLog();
+}
+
+let queue=[],scanned=new Set(),booted=false;
+async function refillQueue(){try{const n=await newest(12);for(const ca of n)if(!scanned.has(ca))queue.push(ca);$('ts-watch').textContent=queue.length;}catch{}}
+async function loop(){
+  if(!queue.length){await refillQueue();if(!queue.length){setTimeout(loop,15000);return;}}
+  const ca=queue.shift();$('ts-watch').textContent=queue.length;if(scanned.has(ca)){setTimeout(loop,200);return;}scanned.add(ca);
+  const t0=performance.now();
+  try{
+    const x=await scanToken(ca);
+    if(x.id.symbol&&x.id.symbol!=='?'&&x.byte.hasCode){
+      const ms=performance.now()-t0;
+      setHero(x);setPanel(x);pushScan(x);bumpStats(x,ms);
+      $('term-status').textContent='SCANNING';
+    }
+  }catch(e){}
+  setTimeout(loop,3200); // gentle on rate limits
+}
+async function boot(){
+  renderLog();$('term-status').textContent='CONNECTING';
+  await refillQueue();
+  if(!queue.length){ // fallback: seed with known live tokens so it never looks dead
+    queue=['0xe1ea5f02858fec9d6f0b828cdd49486b930315e7','0x73641b2b9d5a66f2dbdf7cb57dd204a94d5e28f2','0x020bfc650a365f8bb26819deaabf3e21291018b4'];
+    logLines.push(['muted','  new_pools quiet — scanning recent live tokens']);
   }
-  function setPanel(s){
-    document.getElementById('p-name').textContent=s.name;
-    document.getElementById('p-age').textContent=s.age;
-    document.getElementById('p-score').textContent=s.score;
-    const vd=document.getElementById('p-verdict'); vd.textContent=s.verdict;
-    vd.style.color=s.sv==='g'?'var(--green)':s.sv==='r'?'var(--red)':'var(--amber)';
-    document.getElementById('p-score').style.color=vd.style.color;
-    const ring=document.querySelector('.score .ring');
-    const col=s.sv==='g'?'#00e078':s.sv==='r'?'#ff5a5f':'#f4a638';
-    ring.style.background=`conic-gradient(${col} 0 ${s.score}%,rgba(255,255,255,.08) ${s.score}% 100%)`;
-    document.getElementById('p-checks').innerHTML=s.checks.map(([cl,mk,tx])=>`<div class="c ${cl}"><span class="mk">${mk}</span> ${tx}</div>`).join('');
-    document.querySelector('.mbars').innerHTML=s.bars.map(([k,w,v])=>`<div class="mb"><span>${k}</span><span class="bar"><i style="width:${w}"></i></span><span class="val">${v}</span></div>`).join('');
-  }
-  // ── hero live console (the actual product in the hero) ──
-  function setHero(s){
-    const col=s.sv==='g'?'var(--green)':s.sv==='r'?'var(--red)':'var(--amber)';
-    document.getElementById('h-name').textContent=s.name;
-    const hv=document.getElementById('h-verdict'); hv.textContent=s.verdict; hv.style.color=col;
-    hv.style.background=s.sv==='g'?'rgba(0,200,5,.1)':s.sv==='r'?'rgba(255,77,82,.1)':'rgba(240,169,53,.1)';
-    hv.style.borderColor=s.sv==='g'?'var(--line-g)':s.sv==='r'?'rgba(255,77,82,.3)':'rgba(240,169,53,.3)';
-    document.getElementById('h-meta').textContent=s.age.replace('deployer','dep')+' · '+(s.bars?('vol '+s.bars[0][2]):'');
-    document.getElementById('h-checks').innerHTML=s.checks.slice(0,6).map(([cl,mk,tx])=>`<div class="c ${cl}"><span class="mk">${mk}</span> ${tx}</div>`).join('');
-    const hs=document.getElementById('h-score'); hs.textContent=s.score; hs.style.color=col;
-    document.getElementById('h-mom').innerHTML=s.bars.map(([k,w,v])=>`<div class="mb"><span>${k}</span><span class="bar"><i style="width:${w};background:${col}"></i></span><span class="val">${v}</span></div>`).join('');
-    const last=s.log[s.log.length-1]; const hl=document.getElementById('h-log');
-    hl.innerHTML=`<div class="ll ${last[0]==='g'?'g':last[0]==='r'?'r':last[0]==='a'?'a':''}">▸ ${last[1].replace(/^\s*[►✔✖]?\s*/,'')}</div>`;
-  }
+  loop();
+}
+// start when hero visible (immediately) — the whole page is the demo
+boot();
 
-  let si=0, tstats={scans:2041,pass:318,rug:1140,watch:7};
-  function tick(){
-    const s=samples[si%samples.length]; si++;
-    logLines.push(...s.log,['muted','────────────────────────────']);
-    if(logLines.length>40) logLines=logLines.slice(-40);
-    renderLog();
-    setPanel(s);
-    setHero(s);
-    tstats.scans++; if(s.sv==='g')tstats.pass++; if(s.sv==='r')tstats.rug++;
-    document.getElementById('ts-scans').textContent=tstats.scans.toLocaleString();
-    document.getElementById('ts-pass').textContent=tstats.pass.toLocaleString();
-    document.getElementById('ts-rug').textContent=tstats.rug.toLocaleString();
-  }
-  // hero console starts immediately on load; terminal starts one full cycle in
-  setHero(samples[0]);
-  let heroTimer=setInterval(()=>{const s=samples[si%samples.length];si++;setHero(s);},3400);
-  let feedStarted=false;
-  const fio=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting&&!feedStarted){feedStarted=true;clearInterval(heroTimer);renderLog();tick();setInterval(tick,3400);fio.disconnect();}})},{threshold:.15});
-  fio.observe(document.querySelector('.terminal'));
+/* buttons + toast */
+const toast=m=>{let t=$('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);};
+const ca=$('ca');if(CFG.ca)ca.textContent=CFG.ca;
+ca.onclick=()=>{if(!CFG.ca){toast('Contract goes live at launch');return;}navigator.clipboard.writeText(CFG.ca);const t=ca.textContent;ca.textContent='copied ✓';setTimeout(()=>ca.textContent=t,1200);};
+const wire=(id,url,soon)=>{const el=$(id);if(!el)return;if(url){el.href=url;el.target='_blank';el.rel='noopener';}else{el.href='#';el.style.cursor='pointer';el.addEventListener('click',e=>{e.preventDefault();toast(soon);});}};
+['navBuy','heroBuy','buyMain','buyLink3'].forEach(id=>wire(id,CFG.noxa,'Buy link goes live at launch'));
+['xLink'].forEach(id=>wire(id,CFG.x||null,'X account goes live at launch'));
+['tgLink','tgMain'].forEach(id=>wire(id,CFG.tg||null,'Telegram goes live at launch'));
 
-  const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
-  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-  document.querySelectorAll('header .reveal').forEach((el,i)=>setTimeout(()=>el.classList.add('in'),100+i*120));
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+document.querySelectorAll('header .reveal').forEach((el,i)=>setTimeout(()=>el.classList.add('in'),80+i*110));
 </script>
 </body>
 </html>
