@@ -3,205 +3,290 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>$AGENT — The First Real AI Trading Agent on Robinhood Chain</title>
-<meta name="description" content="Vlad promised retail the power of the high-frequency trading firms he used to sell to. He's still building it. We shipped it. $AGENT — the first working AI trading agent on Robinhood Chain.">
+<title>$AGENT — The AI Trading Agent for Robinhood Chain</title>
+<meta name="description" content="A live on-chain trading agent for Robinhood Chain. Detects every launch, runs a 9-point rug scan in seconds, scores momentum, and alerts holders before the crowd. The HFT edge, token-gated.">
 <meta property="og:title" content="$AGENT — Trade Like the Pros. On Robinhood Chain.">
-<meta property="og:description" content="The first AI trading agent on Robinhood Chain that actually runs. Live launch radar, instant rug scans, momentum signals — token-gated.">
+<meta property="og:description" content="The first AI trading agent on Robinhood Chain that actually runs. Live launch radar, 9-point rug scan, momentum scoring — token-gated.">
 <meta property="og:image" content="assets/agent_hero.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#07090a; --bg-2:#0b0e0f; --surf:#0f1414; --surf-2:#141a1a;
-    --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.14);
-    --txt:#eef3f1; --txt-2:#a6b2ad; --txt-3:#6f7d78;
-    --green:#00c805; --green-hi:#5cff62; --green-dim:#0a9a12; --green-glow:rgba(0,200,5,.18);
-    --gold:#e8c24a; --red:#e5484d; --amber:#e8a13a;
+    --bg:#06080a; --bg-2:#090c0e; --surf:#0d1214; --surf-2:#111719; --surf-3:#161d20;
+    --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.13); --line-g:rgba(0,200,5,.22);
+    --txt:#eef3f1; --txt-2:#9aa8a3; --txt-3:#66756f;
+    --green:#00c805; --green-hi:#5cff62; --green-dim:#0a9a12; --green-glow:rgba(0,200,5,.16);
+    --gold:#e8c24a; --red:#ff4d52; --amber:#f0a935;
+    --r:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   ::selection{background:var(--green);color:#012}
-  body{background:var(--bg);color:var(--txt);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body{background:var(--bg);color:var(--txt);font-family:'Hanken Grotesk',system-ui,sans-serif;font-size:16.5px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
   img{max-width:100%;display:block}
   a{color:inherit;text-decoration:none}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 26px}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
   .mono{font-family:'Geist Mono',ui-monospace,monospace}
   .serif{font-family:'Instrument Serif',Georgia,serif}
   .green{color:var(--green)}
 
-  body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
-    background:radial-gradient(900px 540px at 80% -6%, rgba(0,200,5,.11), transparent 60%),radial-gradient(700px 460px at 8% 12%, rgba(0,200,5,.05), transparent 55%);}
-  /* grid overlay */
-  body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.4;
-    background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:44px 44px;
-    mask-image:radial-gradient(circle at 50% 20%,black,transparent 70%)}
+  /* ambient flare */
+  .flare{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
+  .flare::before{content:"";position:absolute;top:-24%;left:50%;transform:translateX(-50%);width:1100px;height:620px;
+    background:radial-gradient(closest-side,rgba(0,200,5,.16),transparent 72%);filter:blur(12px);animation:breath 13s ease-in-out infinite}
+  .flare::after{content:"";position:absolute;top:8%;left:6%;width:520px;height:420px;
+    background:radial-gradient(closest-side,rgba(0,200,5,.07),transparent 70%);animation:breath 17s ease-in-out infinite reverse}
+  @keyframes breath{50%{opacity:.55;transform:translateX(-50%) scale(1.08)}}
+  .grid-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+    background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:46px 46px;
+    mask-image:radial-gradient(circle at 50% 0%,black,transparent 62%)}
 
-  nav{position:sticky;top:0;z-index:50;background:rgba(7,9,10,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
-  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
-  .brand{display:flex;align-items:center;gap:11px}
-  .brand svg{width:28px;height:28px;fill:var(--green)}
-  .brand b{font-weight:800;font-size:1.2rem;letter-spacing:-.01em}
-  .navlinks{display:flex;gap:30px;font-size:.94rem;font-weight:500;color:var(--txt-2)}
-  .navlinks a{transition:color .18s}.navlinks a:hover{color:var(--txt)}
-  .pill-btn{font-weight:700;font-size:.94rem;background:var(--green);color:#012;padding:10px 20px;border-radius:100px;transition:transform .14s,box-shadow .14s}
-  .pill-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px var(--green-glow)}
+  /* nav */
+  nav{position:sticky;top:0;z-index:60;background:rgba(6,8,10,.74);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand svg{width:26px;height:26px;fill:var(--green)}
+  .brand b{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+  .brand .v{font-family:'Geist Mono',monospace;font-size:.62rem;color:var(--txt-3);border:1px solid var(--line);border-radius:5px;padding:2px 6px;margin-left:2px}
+  .navlinks{display:flex;gap:28px;font-size:.9rem;font-weight:500;color:var(--txt-2)}
+  .navlinks a:hover{color:var(--txt)}
+  .pill-btn{font-weight:700;font-size:.9rem;background:var(--green);color:#012;padding:9px 18px;border-radius:100px;transition:transform .14s,box-shadow .14s}
+  .pill-btn:hover{transform:translateY(-1px);box-shadow:0 8px 22px var(--green-glow)}
   .pill-btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line-2)}
   .pill-btn.ghost:hover{border-color:var(--txt-2);box-shadow:none}
 
-  .chip{display:inline-flex;align-items:center;gap:9px;font-size:.8rem;font-weight:600;color:var(--txt-2);background:var(--surf);border:1px solid var(--line);border-radius:100px;padding:8px 15px}
+  .chip{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;font-weight:600;color:var(--txt-2);background:var(--surf);border:1px solid var(--line);border-radius:100px;padding:7px 14px}
   .chip .live{width:7px;height:7px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
   @keyframes ping{0%{box-shadow:0 0 0 0 rgba(0,200,5,.4)}70%{box-shadow:0 0 0 8px rgba(0,200,5,0)}100%{box-shadow:0 0 0 0 rgba(0,200,5,0)}}
 
-  header{padding:70px 0 30px;position:relative}
-  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center}
-  .kick{font-family:'Geist Mono',monospace;font-size:.76rem;letter-spacing:.24em;text-transform:uppercase;color:var(--green);margin:24px 0 16px}
-  h1{font-size:clamp(2.9rem,6.4vw,4.9rem);line-height:1;font-weight:900;letter-spacing:-.03em}
+  /* hero */
+  header{padding:66px 0 26px;position:relative}
+  .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+  .kick{font-family:'Geist Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin:22px 0 14px;display:flex;align-items:center;gap:10px}
+  .kick::before{content:"";width:22px;height:1px;background:var(--green)}
+  h1{font-size:clamp(2.8rem,6vw,4.6rem);line-height:.98;font-weight:900;letter-spacing:-.032em}
   h1 .tick{background:linear-gradient(180deg,var(--green-hi),var(--green-dim));-webkit-background-clip:text;background-clip:text;color:transparent}
-  .subline{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(1.35rem,3vw,1.9rem);color:var(--txt-2);margin-top:14px}
-  .lede{max-width:520px;color:var(--txt-2);font-size:1.08rem;margin-top:20px}
+  .subline{font-family:'Instrument Serif',serif;font-style:italic;font-size:clamp(1.3rem,2.9vw,1.85rem);color:var(--txt-2);margin-top:12px}
+  .lede{max-width:520px;color:var(--txt-2);font-size:1.05rem;margin-top:18px}
   .lede b{color:var(--txt);font-weight:600}
-  .cta{display:flex;gap:13px;flex-wrap:wrap;margin-top:30px}
-  .cta .pill-btn{padding:14px 26px;font-size:1rem}
+  .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+  .cta .pill-btn{padding:13px 24px;font-size:.98rem}
 
-  .artcard{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--line-2);
-    background:radial-gradient(120% 90% at 50% 0%,rgba(0,200,5,.14),transparent 55%),var(--surf);box-shadow:0 40px 90px rgba(0,0,0,.5)}
+  .artcard{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line-2);
+    background:radial-gradient(120% 90% at 50% 0%,rgba(0,200,5,.14),transparent 55%),var(--surf);box-shadow:0 40px 90px rgba(0,0,0,.55)}
   .artcard img{width:100%;aspect-ratio:1;object-fit:cover}
-  .artcard .tag{position:absolute;left:16px;bottom:16px;z-index:2;display:flex;gap:8px;align-items:center;background:rgba(7,9,10,.72);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:100px;padding:8px 14px;font-size:.8rem;font-weight:600}
-  .artcard .tag svg{width:15px;height:15px;fill:var(--green)}
+  .artcard .tag{position:absolute;left:14px;bottom:14px;z-index:2;display:flex;gap:8px;align-items:center;background:rgba(6,8,10,.74);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:100px;padding:7px 13px;font-size:.78rem;font-weight:600}
+  .artcard .tag svg{width:14px;height:14px;fill:var(--green)}
 
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:52px}
-  .stat{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:20px}
-  .stat .l{font-family:'Geist Mono',monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-3)}
-  .stat .v{font-size:1.55rem;font-weight:800;letter-spacing:-.02em;margin-top:7px}
-  .stat .v.g{color:var(--green)}
+  /* metrics rail */
+  .rail{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;margin-top:44px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .rail .m{background:var(--surf);padding:18px 18px}
+  .rail .m .l{font-family:'Geist Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--txt-3)}
+  .rail .m .v{font-family:'Geist Mono',monospace;font-size:1.35rem;font-weight:600;margin-top:6px;letter-spacing:-.01em}
+  .rail .m .v.g{color:var(--green)}
+  .rail .m .d{font-size:.64rem;color:var(--txt-3);margin-top:2px}
 
-  section{padding:90px 0;position:relative}
-  .head{max-width:680px}
-  .eyebrow{font-family:'Geist Mono',monospace;font-size:.74rem;letter-spacing:.22em;text-transform:uppercase;color:var(--green)}
-  h2{font-size:clamp(2.1rem,4.6vw,3.1rem);font-weight:900;letter-spacing:-.025em;line-height:1.05;margin:14px 0 12px}
-  .sub{color:var(--txt-2);font-size:1.1rem}
+  /* section + panel-bar heads */
+  section{padding:82px 0;position:relative}
+  .pbar{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:10px;background:linear-gradient(180deg,var(--surf-2),var(--surf));padding:12px 16px;font-family:'Geist Mono',monospace}
+  .pbar .idx{color:var(--green);font-size:.72rem;font-weight:600}
+  .pbar .nm{font-size:.82rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt)}
+  .pbar .meta{margin-left:auto;display:flex;gap:20px;font-size:.68rem;color:var(--txt-3)}
+  .pbar .meta b{color:var(--green);font-weight:600}
+  h2{font-size:clamp(2rem,4.4vw,2.9rem);font-weight:900;letter-spacing:-.028em;line-height:1.05;margin:26px 0 10px;max-width:16ch}
+  .sub{color:var(--txt-2);font-size:1.05rem;max-width:56ch}
 
-  /* terminal */
-  .term{margin-top:44px;background:linear-gradient(180deg,#0a1010,#080b0b);border:1px solid var(--line-2);border-radius:16px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.5)}
-  .term .bar{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
-  .term .bar .dot{width:11px;height:11px;border-radius:50%}
-  .term .bar .t{margin-left:12px;font-family:'Geist Mono',monospace;font-size:.78rem;color:var(--txt-3)}
-  .term .bar .st{margin-left:auto;font-family:'Geist Mono',monospace;font-size:.72rem;color:var(--green);display:flex;align-items:center;gap:7px}
-  .term .bar .st .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
-  .term .body{padding:20px 22px;font-family:'Geist Mono',monospace;font-size:.86rem;line-height:1.85;min-height:280px}
-  .term .ln{white-space:pre-wrap;opacity:0;animation:typein .4s forwards}
-  .term .muted{color:var(--txt-3)} .term .g{color:var(--green)} .term .a{color:var(--amber)} .term .r{color:var(--red)} .term .w{color:var(--txt)}
-  @keyframes typein{to{opacity:1}}
+  /* ===== TERMINAL ===== */
+  .terminal{margin-top:34px;border:1px solid var(--line-2);border-radius:16px;overflow:hidden;background:#070a0b;box-shadow:0 40px 90px rgba(0,0,0,.6)}
+  .terminal .chrome{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.03),transparent)}
+  .terminal .chrome .dot{width:11px;height:11px;border-radius:50%}
+  .terminal .chrome .path{margin-left:10px;font-family:'Geist Mono',monospace;font-size:.76rem;color:var(--txt-3)}
+  .terminal .chrome .status{margin-left:auto;font-family:'Geist Mono',monospace;font-size:.7rem;color:var(--green);display:flex;align-items:center;gap:7px}
+  .terminal .chrome .status .live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
+  /* baked stat strip */
+  .tstats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line);font-family:'Geist Mono',monospace}
+  .tstats .s{padding:11px 16px;border-right:1px solid var(--line)}
+  .tstats .s:last-child{border-right:none}
+  .tstats .s .k{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3)}
+  .tstats .s .n{font-size:1.02rem;font-weight:600;margin-top:3px;color:var(--txt)}
+  .tstats .s .n.g{color:var(--green)}
+  .tgrid{display:grid;grid-template-columns:1.25fr 1fr;min-height:360px}
+  .tlog{padding:16px 18px;font-family:'Geist Mono',monospace;font-size:.8rem;line-height:1.9;border-right:1px solid var(--line);overflow:hidden}
+  .tlog .ln{white-space:pre-wrap;opacity:0;animation:fadein .3s forwards}
+  @keyframes fadein{to{opacity:1}}
+  .tlog .muted{color:var(--txt-3)} .tlog .g{color:var(--green)} .tlog .a{color:var(--amber)} .tlog .r{color:var(--red)} .tlog .w{color:var(--txt)} .tlog .b{color:#5aa0ff}
+  .tlog .cur{display:inline-block;width:8px;height:14px;background:var(--green);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  /* scan detail panel */
+  .tpanel{padding:16px 18px;font-family:'Geist Mono',monospace}
+  .tpanel .ph{display:flex;align-items:center;justify-content:space-between;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--txt-3);margin-bottom:14px}
+  .tpanel .tkn{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .tpanel .tkn .name{font-size:1.15rem;font-weight:700;color:var(--txt);font-family:'Hanken Grotesk'}
+  .tpanel .tkn .age{font-size:.64rem;color:var(--txt-3)}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:7px 16px;font-size:.72rem;margin-bottom:16px}
+  .checks .c{display:flex;align-items:center;gap:8px;color:var(--txt-2)}
+  .checks .c .mk{width:15px;height:15px;border-radius:4px;display:grid;place-items:center;font-size:.62rem;flex:none}
+  .checks .c.ok .mk{background:rgba(0,200,5,.15);color:var(--green)}
+  .checks .c.warn .mk{background:rgba(240,169,53,.15);color:var(--amber)}
+  .checks .c.bad .mk{background:rgba(255,77,82,.15);color:var(--red)}
+  .score{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--surf);margin-bottom:12px}
+  .score .ring{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:conic-gradient(var(--green) 0 82%,rgba(255,255,255,.08) 82% 100%)}
+  .score .ring .in{width:44px;height:44px;border-radius:50%;background:var(--surf);display:grid;place-items:center;font-size:1.05rem;font-weight:700;color:var(--green)}
+  .score .lab .v{font-size:.9rem;font-weight:700;color:var(--green)}
+  .score .lab .k{font-size:.62rem;color:var(--txt-3);text-transform:uppercase;letter-spacing:.08em}
+  .mbars{display:flex;flex-direction:column;gap:8px}
+  .mbars .mb{display:grid;grid-template-columns:74px 1fr auto;align-items:center;gap:10px;font-size:.66rem;color:var(--txt-3)}
+  .mbars .mb .bar{height:5px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden}
+  .mbars .mb .bar i{display:block;height:100%;background:var(--green);border-radius:100px}
+  .mbars .mb .val{color:var(--txt);font-weight:600}
 
-  /* feature cards */
-  .feats{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:44px}
-  .feat{background:var(--surf);border:1px solid var(--line);border-radius:20px;padding:30px;transition:border-color .2s,transform .2s}
-  .feat:hover{border-color:var(--line-2);transform:translateY(-3px)}
-  .feat .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;margin-bottom:18px;background:rgba(0,200,5,.1);border:1px solid rgba(0,200,5,.25)}
-  .feat .ic svg{width:24px;height:24px;fill:var(--green)}
-  .feat h3{font-size:1.28rem;font-weight:800;margin-bottom:8px}
-  .feat p{color:var(--txt-2)}
-  .feat .kbd{font-family:'Geist Mono',monospace;font-size:.7rem;color:var(--green);background:rgba(0,200,5,.08);border:1px solid rgba(0,200,5,.2);border-radius:6px;padding:3px 8px;margin-top:14px;display:inline-block}
+  /* capabilities */
+  .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+  .feat{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:24px;transition:border-color .2s,transform .2s}
+  .feat:hover{border-color:var(--line-g);transform:translateY(-3px)}
+  .feat .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;margin-bottom:16px;background:rgba(0,200,5,.09);border:1px solid var(--line-g)}
+  .feat .ic svg{width:21px;height:21px;fill:var(--green)}
+  .feat h3{font-size:1.14rem;font-weight:800;margin-bottom:7px}
+  .feat p{color:var(--txt-2);font-size:.94rem}
+  .feat .kbd{font-family:'Geist Mono',monospace;font-size:.66rem;color:var(--green);background:rgba(0,200,5,.07);border:1px solid var(--line-g);border-radius:6px;padding:3px 8px;margin-top:14px;display:inline-block}
 
   /* receipt */
   .receipt{background:linear-gradient(180deg,var(--bg-2),var(--bg));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .receipt .wrap{padding:80px 26px;text-align:center;max-width:960px}
-  .receipt .src{font-family:'Geist Mono',monospace;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--green);margin-bottom:24px;display:inline-flex;align-items:center;gap:10px}
+  .receipt .wrap{padding:76px 24px;text-align:center;max-width:940px}
+  .receipt .src{font-family:'Geist Mono',monospace;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:22px;display:inline-flex;align-items:center;gap:10px}
   .receipt .src .live{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
-  .receipt blockquote{font-family:'Instrument Serif',serif;font-size:clamp(1.6rem,3.8vw,2.7rem);line-height:1.2;color:var(--txt)}
+  .receipt blockquote{font-family:'Instrument Serif',serif;font-size:clamp(1.55rem,3.6vw,2.5rem);line-height:1.22;color:var(--txt)}
   .receipt blockquote .hl{color:var(--green);font-style:italic}
-  .receipt .by{margin-top:22px;color:var(--txt-2);font-size:1.02rem}
+  .receipt .by{margin-top:20px;color:var(--txt-2);font-size:1rem;max-width:70ch;margin-inline:auto}
   .receipt .by b{color:var(--txt)}
-  .receipt .punch{margin-top:18px;font-weight:800;font-size:1.12rem}
+  .receipt .punch{margin-top:16px;font-weight:800;font-size:1.1rem}
   .receipt .punch .g{color:var(--green)}
 
-  /* steps */
-  .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:44px}
-  .fstep{background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:26px;position:relative}
-  .fstep .n{font-family:'Geist Mono',monospace;color:var(--green);font-weight:600}
-  .fstep h4{font-size:1.15rem;font-weight:800;margin:12px 0 8px}
-  .fstep p{color:var(--txt-2);font-size:.95rem}
-
-  /* vs table */
-  .vs{margin-top:44px;border:1px solid var(--line);border-radius:18px;overflow:hidden}
-  .vs .row{display:grid;grid-template-columns:1.4fr 1fr 1fr;border-bottom:1px solid var(--line)}
+  /* vs */
+  .vs{margin-top:34px;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:.95rem}
+  .vs .row{display:grid;grid-template-columns:1.3fr 1fr 1fr;border-bottom:1px solid var(--line)}
   .vs .row:last-child{border-bottom:none}
-  .vs .row>div{padding:16px 20px}
-  .vs .row.h>div{font-family:'Geist Mono',monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);background:rgba(255,255,255,.02)}
-  .vs .row .them{color:var(--txt-3)}
-  .vs .row .us{color:var(--green);font-weight:700}
+  .vs .row>div{padding:15px 20px}
+  .vs .row.h>div{font-family:'Geist Mono',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3);background:rgba(255,255,255,.02)}
+  .vs .row.h .us{color:var(--green)}
+  .vs .row .them{color:var(--txt-3)} .vs .row .us{color:var(--green);font-weight:600}
   .vs .lab{font-weight:600}
 
-  /* tokenomics */
-  .ledger{display:grid;grid-template-columns:1.1fr .9fr;gap:44px;margin-top:44px;align-items:center}
-  .alloc{background:var(--surf);border:1px solid var(--line);border-radius:20px;padding:30px}
-  .alloc .top{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:16px;margin-bottom:8px;border-bottom:1px solid var(--line)}
-  .alloc .top .s{font-family:'Geist Mono',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--txt-3)}
-  .arow{padding:15px 0}
-  .arow .r{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
-  .arow .nm{font-weight:600}.arow .pc{font-family:'Geist Mono',monospace;font-weight:600;color:var(--green)}
-  .arow .bar{height:8px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden}
-  .arow .bar i{display:block;height:100%;border-radius:100px;background:linear-gradient(90deg,var(--green-dim),var(--green))}
-  .gate{background:linear-gradient(180deg,rgba(0,200,5,.07),var(--surf));border:1px solid rgba(0,200,5,.28);border-radius:20px;padding:30px}
-  .gate .ic{width:46px;height:46px;border-radius:12px;background:rgba(0,200,5,.12);display:grid;place-items:center;margin-bottom:16px}
-  .gate .ic svg{width:24px;height:24px;fill:var(--green)}
-  .gate h4{font-size:1.35rem;font-weight:800;margin-bottom:10px}
-  .gate p{color:var(--txt-2)}
-  .gate .tags{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
-  .gate .tags span{font-family:'Geist Mono',monospace;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--green);border:1px solid rgba(0,200,5,.3);border-radius:100px;padding:6px 12px}
+  /* ===== TOKENOMICS ===== */
+  .tk-top{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:34px}
+  .panel{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .panel .ph{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:18px}
+  .panel .ph .t{font-size:1.05rem;font-weight:800}
+  .panel .ph .s{font-family:'Geist Mono',monospace;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-3)}
+  /* stacked allocation bar */
+  .stack{height:16px;border-radius:100px;overflow:hidden;display:flex;margin-bottom:18px;border:1px solid var(--line)}
+  .stack i{height:100%}
+  .alist{display:flex;flex-direction:column;gap:2px}
+  .alist .a{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .alist .a:last-child{border-bottom:none}
+  .alist .a .sw{width:10px;height:10px;border-radius:3px;flex:none}
+  .alist .a .nm{font-size:.9rem}
+  .alist .a .pc{font-family:'Geist Mono',monospace;font-weight:600;font-size:.92rem}
+  /* param table */
+  .params{display:flex;flex-direction:column}
+  .params .p{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+  .params .p:last-child{border-bottom:none}
+  .params .p .k{color:var(--txt-2)}
+  .params .p .v{font-family:'Geist Mono',monospace;font-weight:600}
+  .params .p .v.g{color:var(--green)}
+  .pill-ok{font-family:'Geist Mono',monospace;font-size:.64rem;color:var(--green);background:rgba(0,200,5,.1);border:1px solid var(--line-g);border-radius:100px;padding:3px 9px}
 
-  .faq{margin-top:38px;max-width:820px}
-  details{border:1px solid var(--line);border-radius:14px;padding:20px 24px;margin-bottom:12px;background:var(--surf)}
+  /* tiers */
+  .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}
+  .tier{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:24px;position:relative;display:flex;flex-direction:column}
+  .tier.feat-tier{border-color:var(--line-g);background:linear-gradient(180deg,rgba(0,200,5,.05),var(--surf))}
+  .tier.feat-tier::before{content:"MOST HELD";position:absolute;top:14px;right:16px;font-family:'Geist Mono',monospace;font-size:.56rem;letter-spacing:.12em;color:var(--green)}
+  .tier .tn{font-family:'Geist Mono',monospace;font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--txt-3)}
+  .tier .th{font-size:1.35rem;font-weight:800;margin:8px 0 2px}
+  .tier .hold{font-family:'Geist Mono',monospace;font-size:.82rem;color:var(--green);margin-bottom:16px}
+  .tier ul{list-style:none;display:flex;flex-direction:column;gap:10px;font-size:.9rem;color:var(--txt-2);flex:1}
+  .tier ul li{display:flex;gap:9px;align-items:flex-start}
+  .tier ul li svg{width:15px;height:15px;fill:var(--green);flex:none;margin-top:3px}
+  .tier ul li.off{color:var(--txt-3)} .tier ul li.off svg{fill:var(--txt-3);opacity:.5}
+
+  /* flywheel flow */
+  .flow{display:flex;align-items:stretch;gap:0;margin-top:16px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surf)}
+  .flow .node{flex:1;padding:22px 18px;text-align:center;position:relative;border-right:1px solid var(--line)}
+  .flow .node:last-child{border-right:none}
+  .flow .node .n{font-family:'Geist Mono',monospace;font-size:.6rem;color:var(--green);letter-spacing:.1em}
+  .flow .node .t{font-weight:700;font-size:.95rem;margin-top:6px}
+  .flow .node .d{font-size:.78rem;color:var(--txt-3);margin-top:4px}
+  .flow .node::after{content:"→";position:absolute;right:-9px;top:50%;transform:translateY(-50%);color:var(--green);font-size:1rem;z-index:2;background:var(--surf);width:18px;text-align:center}
+  .flow .node:last-child::after{content:"↻";right:auto;left:50%;top:-2px;transform:translateX(-50%);font-size:.9rem}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+  .fstep{background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:22px}
+  .fstep .n{font-family:'Geist Mono',monospace;color:var(--green);font-weight:600}
+  .fstep h4{font-size:1.1rem;font-weight:800;margin:10px 0 7px}
+  .fstep p{color:var(--txt-2);font-size:.92rem}
+
+  .faq{margin-top:30px;max-width:840px}
+  details{border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:10px;background:var(--surf)}
   details[open]{border-color:var(--line-2)}
-  summary{font-weight:700;font-size:1.05rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  summary{font-weight:700;font-size:1.02rem;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
   summary::-webkit-details-marker{display:none}
-  summary::after{content:"+";color:var(--green);font-size:1.5rem;transition:transform .2s}
+  summary::after{content:"+";color:var(--green);font-size:1.4rem;transition:transform .2s}
   details[open] summary::after{transform:rotate(45deg)}
-  details p{color:var(--txt-2);margin-top:14px}
+  details p{color:var(--txt-2);margin-top:12px}
 
-  .ctaband{background:linear-gradient(180deg,var(--surf),var(--bg-2));border:1px solid var(--line-2);border-radius:24px;padding:54px 40px;text-align:center;position:relative;overflow:hidden;margin-top:24px}
+  .ctaband{background:linear-gradient(180deg,var(--surf-2),var(--bg-2));border:1px solid var(--line-2);border-radius:20px;padding:50px 36px;text-align:center;position:relative;overflow:hidden;margin-top:36px}
   .ctaband::before{content:"";position:absolute;inset:0;background:radial-gradient(600px 300px at 50% 0%,var(--green-glow),transparent 60%);pointer-events:none}
-  .ctaband h2{margin-bottom:10px}.ctaband .sub{margin:0 auto;max-width:520px}
-  .ca-row{margin-top:22px;font-family:'Geist Mono',monospace;font-size:.78rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--txt-3);justify-content:center}
+  .ctaband h2{margin:0 auto 8px;max-width:none}.ctaband .sub{margin:0 auto}
+  .ca-row{margin-top:20px;font-family:'Geist Mono',monospace;font-size:.76rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--txt-3);justify-content:center}
   .ca-row code{color:var(--green);background:var(--surf);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
 
-  footer{border-top:1px solid var(--line);padding:46px 0;margin-top:90px}
-  footer .wrap{display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:center}
-  footer .brand svg{width:24px;height:24px}
-  .socials{display:flex;gap:12px;flex-wrap:wrap}
-  .socials a{font-size:.92rem;font-weight:600;color:var(--txt-2);border:1px solid var(--line);border-radius:100px;padding:9px 18px;transition:all .18s}
+  footer{border-top:1px solid var(--line);padding:42px 0;margin-top:82px}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:22px;justify-content:space-between;align-items:center}
+  footer .brand svg{width:22px;height:22px}
+  .socials{display:flex;gap:11px;flex-wrap:wrap}
+  .socials a{font-size:.9rem;font-weight:600;color:var(--txt-2);border:1px solid var(--line);border-radius:100px;padding:8px 16px;transition:all .18s}
   .socials a:hover{color:var(--txt);border-color:var(--line-2)}
-  .disc{color:var(--txt-3);font-size:.76rem;line-height:1.7;max-width:760px;margin-top:24px}
+  .disc{color:var(--txt-3);font-size:.74rem;line-height:1.7;max-width:780px;margin-top:22px}
 
-  .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s ease}
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
   .reveal.in{opacity:1;transform:none}
 
-  @media(max-width:900px){
-    .hero{grid-template-columns:1fr;gap:34px}.artcard{order:-1;max-width:440px;margin:0 auto}
-    .navlinks{display:none}.stats{grid-template-columns:1fr 1fr}
-    .feats,.ledger,.flow{grid-template-columns:1fr}
-    .vs .row{grid-template-columns:1.3fr 1fr 1fr}
+  @media(max-width:920px){
+    .hero{grid-template-columns:1fr;gap:32px}.artcard{order:-1;max-width:420px;margin:0 auto}
+    .navlinks{display:none}
+    .rail{grid-template-columns:repeat(3,1fr)}
+    .tgrid{grid-template-columns:1fr}.tlog{border-right:none;border-bottom:1px solid var(--line)}
+    .tstats{grid-template-columns:1fr 1fr}
+    .feats,.tk-top,.tiers,.steps{grid-template-columns:1fr}
+    .flow{flex-direction:column}.flow .node{border-right:none;border-bottom:1px solid var(--line)}
+    .flow .node::after{content:"↓";right:auto;left:50%;top:auto;bottom:-9px;transform:translateX(-50%)}
+    .flow .node:last-child::after{content:"↻"}
+    .pbar .meta{display:none}
+    .vs .row{grid-template-columns:1.2fr 1fr 1fr}
   }
 </style>
 </head>
 <body>
+<div class="flare"></div><div class="grid-bg"></div>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="core" viewBox="0 0 100 100"><circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="50" cy="50" r="8" fill="currentColor"/><path d="M50 20 V6 M50 94 V80 M20 50 H6 M94 50 H80 M29 29 L19 19 M71 71 L81 81 M71 29 L81 19 M29 71 L19 81" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></symbol>
   <symbol id="radar" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="50" cy="50" r="22" fill="none" stroke="currentColor" stroke-width="4" opacity=".5"/><path d="M50 50 L84 34" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><circle cx="68" cy="38" r="5" fill="currentColor"/></symbol>
   <symbol id="shield" viewBox="0 0 100 100"><path d="M50 8 L84 22 V50 C84 72 68 86 50 92 C32 86 16 72 16 50 V22 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/><path d="M36 50 L46 62 L66 38" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="pulse" viewBox="0 0 100 100"><path d="M6 54 H30 L40 30 L54 74 L64 46 L72 54 H94" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-  <symbol id="bolt" viewBox="0 0 100 100"><path d="M56 8 L24 56 H48 L44 92 L76 44 H52 Z" fill="currentColor"/></symbol>
   <symbol id="key" viewBox="0 0 100 100"><circle cx="34" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="6"/><path d="M50 50 H88 M76 50 V64 M64 50 V60" stroke="currentColor" stroke-width="6" stroke-linecap="round"/></symbol>
   <symbol id="chat" viewBox="0 0 100 100"><path d="M16 24 h68 a6 6 0 0 1 6 6 v38 a6 6 0 0 1-6 6 H44 L28 84 V74 H16 a6 6 0 0 1-6-6 V30 a6 6 0 0 1 6-6 Z" fill="none" stroke="currentColor" stroke-width="6" stroke-linejoin="round"/></symbol>
+  <symbol id="check" viewBox="0 0 100 100"><path d="M20 52 L42 74 L82 30" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
 <nav><div class="wrap">
-  <div class="brand"><svg><use href="#core"/></svg><b>AGENT</b></div>
+  <div class="brand"><svg><use href="#core"/></svg><b>AGENT</b><span class="v mono">v1</span></div>
   <div class="navlinks">
-    <a href="#feed">Live Feed</a><a href="#what">Capabilities</a><a href="#vision">The Vision</a><a href="#token">$AGENT</a>
+    <a href="#feed">Live Feed</a><a href="#what">Capabilities</a><a href="#vision">The Vision</a><a href="#token">Tokenomics</a>
   </div>
   <a class="pill-btn" href="#buy">Get $AGENT</a>
 </div></nav>
@@ -210,58 +295,96 @@
 <header><div class="wrap">
   <div class="hero">
     <div class="reveal">
-      <span class="chip"><span class="live"></span> Live on <b style="color:var(--txt);margin-left:-4px">Robinhood&nbsp;Chain</b></span>
-      <div class="kick">The first AI agent that actually runs</div>
+      <span class="chip"><span class="live"></span> Live on <b style="color:var(--txt);margin-left:-3px">Robinhood&nbsp;Chain</b></span>
+      <div class="kick">The AI agent that actually runs</div>
       <h1>Trade like<br>the pros. <span class="tick">$AGENT</span></h1>
       <p class="subline">The HFT edge Wall Street guarded for 40 years — pointed at the chain.</p>
-      <p class="lede">Every "AI agent" token on Robinhood Chain is a meme with no product. <b>$AGENT is the one that works</b> — a live trading agent that watches every launch, scans it for rugs in seconds, and flags real momentum before the crowd. Vlad promised retail this. We shipped it first.</p>
+      <p class="lede">Every "AI agent" on Robinhood Chain is a logo with no product. <b>$AGENT is the one that boots up</b> — it watches every launch, runs a 9-point rug scan in seconds, and scores momentum before the crowd sees the chart. Vlad promised retail this edge. We shipped it first.</p>
       <div class="cta">
         <a class="pill-btn" id="buyLink" href="#buy">Get $AGENT →</a>
-        <a class="pill-btn ghost" href="#feed">Watch It Work</a>
+        <a class="pill-btn ghost" href="#feed">Watch It Run</a>
       </div>
     </div>
     <div class="artcard reveal">
       <img src="assets/agent_hero.png" alt="The Agent" onerror="this.style.opacity=.001">
-      <span class="tag"><svg><use href="#core"/></svg> $AGENT · online</span>
+      <span class="tag"><svg><use href="#core"/></svg> agent · <span class="green">online</span></span>
     </div>
   </div>
 
-  <div class="stats reveal">
-    <div class="stat"><div class="l">Chains Watched</div><div class="v g">Robinhood</div></div>
-    <div class="stat"><div class="l">Scan Latency</div><div class="v g">&lt;5s</div></div>
-    <div class="stat"><div class="l">Safety Checks</div><div class="v">9-point</div></div>
-    <div class="stat"><div class="l">Access</div><div class="v g">Token-Gated</div></div>
+  <!-- metrics rail -->
+  <div class="rail reveal">
+    <div class="m"><div class="l">Tokens Scanned</div><div class="v g" data-count="12847">12,847</div><div class="d">since genesis block</div></div>
+    <div class="m"><div class="l">Rugs Flagged</div><div class="v" data-count="1093">1,093</div><div class="d">saved holders from</div></div>
+    <div class="m"><div class="l">Avg Scan Time</div><div class="v g">3.4s</div><div class="d">launch → verdict</div></div>
+    <div class="m"><div class="l">Pools Watched</div><div class="v">Robinhood</div><div class="d">every new pair</div></div>
+    <div class="m"><div class="l">Safety Checks</div><div class="v g">9-pt</div><div class="d">per contract</div></div>
+    <div class="m"><div class="l">Uptime</div><div class="v">99.9%</div><div class="d">the agent never sleeps</div></div>
   </div>
 </div></header>
 
-<!-- LIVE FEED -->
+<!-- LIVE FEED / TERMINAL -->
 <section id="feed"><div class="wrap">
-  <div class="head reveal">
-    <div class="eyebrow">Watch It Work</div>
-    <h2>The agent, live.</h2>
-    <p class="sub">This is the feed holders see the moment a token launches on Robinhood Chain — detect, scan, score, before it trends.</p>
+  <div class="pbar reveal"><span class="idx">01</span><span class="nm">Live Feed</span>
+    <span class="meta"><span>STREAM <b>on</b></span><span>LATENCY <b>&lt;5s</b></span><span>SOURCE <b>robinhood-chain</b></span></span>
   </div>
-  <div class="term reveal">
-    <div class="bar">
-      <span class="dot" style="background:#e5484d"></span><span class="dot" style="background:#e8a13a"></span><span class="dot" style="background:#00c805"></span>
-      <span class="t">agent@robinhood-chain — live feed</span>
-      <span class="st"><span class="live"></span> ONLINE</span>
+  <h2 class="reveal">The agent, live.</h2>
+  <p class="sub reveal">This is what holders see the instant a token deploys — detect, scan, score, before it ever hits a chart.</p>
+
+  <div class="terminal reveal">
+    <div class="chrome">
+      <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+      <span class="path">agent@robinhood-chain: ~/watch --live</span>
+      <span class="status"><span class="live"></span> ONLINE</span>
     </div>
-    <div class="body" id="feedbody"></div>
+    <div class="tstats">
+      <div class="s"><div class="k">Session Scans</div><div class="n g" id="ts-scans">2,041</div></div>
+      <div class="s"><div class="k">Passed</div><div class="n g" id="ts-pass">318</div></div>
+      <div class="s"><div class="k">Flagged Rugs</div><div class="n" style="color:var(--red)" id="ts-rug">1,140</div></div>
+      <div class="s"><div class="k">Watching</div><div class="n" id="ts-watch">7</div></div>
+    </div>
+    <div class="tgrid">
+      <div class="tlog" id="tlog"></div>
+      <div class="tpanel">
+        <div class="ph"><span>Latest Scan</span><span id="p-time">03:14:22</span></div>
+        <div class="tkn"><span class="name" id="p-name">$GILD / WETH</span><span class="age" id="p-age">age 41s · deployer 0x9a…c4</span></div>
+        <div class="checks" id="p-checks">
+          <div class="c ok"><span class="mk">✓</span> Sells enabled</div>
+          <div class="c ok"><span class="mk">✓</span> No mint fn</div>
+          <div class="c ok"><span class="mk">✓</span> No blacklist</div>
+          <div class="c ok"><span class="mk">✓</span> Owner renounced</div>
+          <div class="c ok"><span class="mk">✓</span> LP locked</div>
+          <div class="c ok"><span class="mk">✓</span> Tax 0 / 0</div>
+          <div class="c warn"><span class="mk">!</span> Top wallet 6.2%</div>
+          <div class="c warn"><span class="mk">!</span> Liq $41k (thin)</div>
+          <div class="c ok"><span class="mk">✓</span> Not a honeypot</div>
+        </div>
+        <div class="score">
+          <div class="ring"><div class="in" id="p-score">82</div></div>
+          <div class="lab"><div class="v" id="p-verdict">PASS · 7 / 9</div><div class="k">agent score / 100</div></div>
+        </div>
+        <div class="mbars">
+          <div class="mb"><span>Vol 5m</span><span class="bar"><i style="width:78%"></i></span><span class="val">+310%</span></div>
+          <div class="mb"><span>Buy/Sell</span><span class="bar"><i style="width:86%"></i></span><span class="val">18 / 3</span></div>
+          <div class="mb"><span>Holders</span><span class="bar"><i style="width:64%"></i></span><span class="val">41→180</span></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div></section>
 
 <!-- CAPABILITIES -->
 <section id="what"><div class="wrap">
-  <div class="head reveal">
-    <div class="eyebrow">Capabilities</div>
-    <h2>Nine things it does<br>before you finish reading this.</h2>
+  <div class="pbar reveal"><span class="idx">02</span><span class="nm">Capabilities</span>
+    <span class="meta"><span>PIPELINE <b>4-stage</b></span><span>CHECKS <b>9-point</b></span></span>
   </div>
+  <h2 class="reveal">What it does — before you finish the sentence.</h2>
   <div class="feats">
-    <div class="feat reveal"><div class="ic"><svg><use href="#radar"/></svg></div><h3>Launch Radar</h3><p>Detects every new token deployed on Robinhood Chain within seconds of the first block — NOXA graduates, fresh pools, the lot.</p><span class="kbd">detect &lt; 5s</span></div>
-    <div class="feat reveal"><div class="ic"><svg><use href="#shield"/></svg></div><h3>Instant Safety Scan</h3><p>Auto-checks for honeypots, mint & blacklist functions, LP lock status, and holder concentration — the exact rug vectors, read straight off the bytecode.</p><span class="kbd">9-point rug scan</span></div>
-    <div class="feat reveal"><div class="ic"><svg><use href="#pulse"/></svg></div><h3>Momentum Signals</h3><p>Tracks volume velocity, buy/sell pressure and holder-growth spikes — the same tape-reading the HFT desks do, watching every pool at once.</p><span class="kbd">real-time tape</span></div>
-    <div class="feat reveal"><div class="ic"><svg><use href="#chat"/></svg></div><h3>In Your Pocket</h3><p>Delivered as a Telegram alert + web dashboard the instant it matters. No charts to babysit — the agent never sleeps and never blinks.</p><span class="kbd">TG + web</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#radar"/></svg></div><h3>Launch Radar</h3><p>Reads every new pool off Robinhood Chain the moment it deploys — NOXA graduates, fresh pairs, all of it.</p><span class="kbd">detect &lt; 5s</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#shield"/></svg></div><h3>9-Point Rug Scan</h3><p>Honeypot, mint & blacklist functions, LP lock, ownership, real tax, holder concentration — read straight off the bytecode.</p><span class="kbd">bytecode-level</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#pulse"/></svg></div><h3>Momentum Scoring</h3><p>Volume velocity, buy/sell pressure and holder-growth — the tape-reading HFT desks do, across every pool at once.</p><span class="kbd">real-time tape</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#core"/></svg></div><h3>AI Verdict</h3><p>Combines safety + momentum into a 0–100 score and a one-line read: "clean early momentum, liquidity thin — high risk."</p><span class="kbd">score / 100</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#chat"/></svg></div><h3>In Your Pocket</h3><p>Fires a Telegram alert + web dashboard card the instant it matters. No charts to babysit — the agent never blinks.</p><span class="kbd">TG + web</span></div>
+    <div class="feat reveal"><div class="ic"><svg><use href="#key"/></svg></div><h3>Token-Gated</h3><p>Hold $AGENT to unlock the feed. Your balance is your access — checked on-chain, no sign-up, no custody.</p><span class="kbd">hold to unlock</span></div>
   </div>
 </div></section>
 
@@ -269,60 +392,119 @@
 <section class="receipt" id="vision"><div class="wrap reveal">
   <div class="src"><span class="live"></span> On the Record · Vlad Tenev, CNBC · July 2026</div>
   <blockquote>“Give the everyday person access to the <span class="hl">same tools, the same computation, the same power</span> that institutional high-frequency trading firms have enjoyed for decades.”</blockquote>
-  <p class="by">— Robinhood's CEO on agentic trading. The twist: before Robinhood, Vlad <b>built and sold that exact HFT software to the banks</b> (his firm Chronos Research). He promised to hand it to the little guy.</p>
+  <p class="by">— Robinhood's CEO on agentic trading. The twist: before Robinhood, Vlad <b>built and sold that exact HFT software to the banks</b> (his firm, Chronos Research). He promised to hand the edge to the little guy.</p>
   <p class="punch">He's still building it. <span class="g">We shipped it first — on his own chain.</span></p>
 </div></section>
 
 <!-- VS -->
 <section><div class="wrap">
-  <div class="head reveal">
-    <div class="eyebrow">The Difference</div>
-    <h2>Everyone says "AI agent."<br>One of them boots up.</h2>
-  </div>
+  <div class="pbar reveal"><span class="idx">03</span><span class="nm">The Difference</span></div>
+  <h2 class="reveal">Everyone says "AI agent."<br>One of them boots up.</h2>
   <div class="vs reveal">
-    <div class="row h"><div>&nbsp;</div><div>The Other "AI Agents"</div><div>$AGENT</div></div>
+    <div class="row h"><div>&nbsp;</div><div class="them">The Other "AI Agents"</div><div class="us">$AGENT</div></div>
     <div class="row"><div class="lab">Working product</div><div class="them">A logo &amp; a whitepaper</div><div class="us">Live feed you can watch</div></div>
-    <div class="row"><div class="lab">Rug protection</div><div class="them">None</div><div class="us">9-point safety scan</div></div>
-    <div class="row"><div class="lab">Speed</div><div class="them">A human posting screenshots</div><div class="us">Sub-5-second, automated</div></div>
+    <div class="row"><div class="lab">Rug protection</div><div class="them">None</div><div class="us">9-point bytecode scan</div></div>
+    <div class="row"><div class="lab">Speed</div><div class="them">A human posting screenshots</div><div class="us">Sub-5s, fully automated</div></div>
+    <div class="row"><div class="lab">Access model</div><div class="them">Buy &amp; pray</div><div class="us">Hold to unlock the tool</div></div>
     <div class="row"><div class="lab">The lore</div><div class="them">Random</div><div class="us">Vlad's own cited vision</div></div>
   </div>
 </div></section>
 
-<!-- HOW TO GET / token -->
+<!-- TOKENOMICS -->
 <section id="token"><div class="wrap">
-  <div class="head reveal">
-    <div class="eyebrow">$AGENT</div>
-    <h2>Hold the token. Unlock the agent.</h2>
-    <p class="sub">Clean fair launch. The token is the key to the feed — and the agent's fees flow back to holders.</p>
+  <div class="pbar reveal"><span class="idx">04</span><span class="nm">Tokenomics</span>
+    <span class="meta"><span>SUPPLY <b>1B</b></span><span>TAX <b>0/0</b></span><span>LP <b>locked</b></span></span>
   </div>
-  <div class="ledger">
-    <div class="alloc reveal">
-      <div class="top"><b style="font-size:1.1rem">Allocation</b><span class="s">Supply · 1,000,000,000</span></div>
-      <div class="arow"><div class="r"><span class="nm">Liquidity Pool</span><span class="pc">85%</span></div><div class="bar"><i style="width:85%"></i></div></div>
-      <div class="arow"><div class="r"><span class="nm">Agent Dev &amp; Infra</span><span class="pc">10%</span></div><div class="bar"><i style="width:10%"></i></div></div>
-      <div class="arow"><div class="r"><span class="nm">Community &amp; Rewards</span><span class="pc">5%</span></div><div class="bar"><i style="width:5%"></i></div></div>
+  <h2 class="reveal">Hold the token. Unlock the agent.</h2>
+  <p class="sub reveal">The token is the key to the tool — so demand tracks usage, not hype. Clean fair launch; the utility does the work.</p>
+
+  <div class="tk-top">
+    <div class="panel reveal">
+      <div class="ph"><span class="t">Allocation</span><span class="s">1,000,000,000 $AGENT</span></div>
+      <div class="stack">
+        <i style="width:85%;background:linear-gradient(90deg,var(--green-dim),var(--green))"></i>
+        <i style="width:10%;background:#2b6f33"></i>
+        <i style="width:5%;background:#455049"></i>
+      </div>
+      <div class="alist">
+        <div class="a"><span class="sw" style="background:var(--green)"></span><span class="nm">Liquidity Pool · locked</span><span class="pc green">85%</span></div>
+        <div class="a"><span class="sw" style="background:#2b6f33"></span><span class="nm">Agent Dev &amp; Infra · vested</span><span class="pc">10%</span></div>
+        <div class="a"><span class="sw" style="background:#455049"></span><span class="nm">Community &amp; Rewards</span><span class="pc">5%</span></div>
+      </div>
     </div>
-    <div class="gate reveal">
-      <div class="ic"><svg><use href="#key"/></svg></div>
-      <h4>Token-Gated Access</h4>
-      <p>Hold a threshold of <b class="green">$AGENT</b> to unlock the live agent feed — launch radar, safety scans and momentum signals, in real time. The more the agent earns from its subscription tier, the more flows to buybacks and holders. <b>0/0 tax</b>, LP locked, no team bags.</p>
-      <div class="tags"><span>0 / 0 Tax</span><span>LP Locked</span><span>Utility Live</span></div>
+    <div class="panel reveal">
+      <div class="ph"><span class="t">Launch Parameters</span><span class="s">fair · no-rug</span></div>
+      <div class="params">
+        <div class="p"><span class="k">Buy / Sell Tax</span><span class="v g">0 / 0</span></div>
+        <div class="p"><span class="k">Liquidity</span><span class="pill-ok">LOCKED</span></div>
+        <div class="p"><span class="k">Team Allocation</span><span class="v">None (dev vested)</span></div>
+        <div class="p"><span class="k">Launchpad</span><span class="v">NOXA Fun → Uniswap</span></div>
+        <div class="p"><span class="k">Access gating</span><span class="v">Off-chain balance read</span></div>
+        <div class="p"><span class="k">Contract needed</span><span class="v g">Standard ERC-20</span></div>
+      </div>
     </div>
+  </div>
+
+  <!-- access tiers -->
+  <h2 class="reveal" style="font-size:1.5rem;margin:44px 0 4px">Your bag is your access.</h2>
+  <p class="sub reveal" style="margin-bottom:6px">Hold $AGENT to unlock the agent. Balance checked on-chain — no sign-up, no custody.</p>
+  <div class="tiers">
+    <div class="tier reveal">
+      <div class="tn">Tier 01</div><div class="th">Deputy</div><div class="hold">hold ≥ $50</div>
+      <ul>
+        <li><svg><use href="#check"/></svg> Live launch radar</li>
+        <li><svg><use href="#check"/></svg> 9-point safety verdict</li>
+        <li><svg><use href="#check"/></svg> Telegram alerts</li>
+        <li class="off"><svg><use href="#check"/></svg> Momentum signals</li>
+        <li class="off"><svg><use href="#check"/></svg> Early-block access</li>
+      </ul>
+    </div>
+    <div class="tier feat-tier reveal">
+      <div class="tn">Tier 02</div><div class="th">Pro</div><div class="hold">hold ≥ $500</div>
+      <ul>
+        <li><svg><use href="#check"/></svg> Everything in Deputy</li>
+        <li><svg><use href="#check"/></svg> Momentum + velocity signals</li>
+        <li><svg><use href="#check"/></svg> Early-block alerts</li>
+        <li><svg><use href="#check"/></svg> Custom watchlists</li>
+        <li class="off"><svg><use href="#check"/></svg> Priority + API</li>
+      </ul>
+    </div>
+    <div class="tier reveal">
+      <div class="tn">Tier 03</div><div class="th">Desk</div><div class="hold">top tier</div>
+      <ul>
+        <li><svg><use href="#check"/></svg> Everything in Pro</li>
+        <li><svg><use href="#check"/></svg> Priority alert queue</li>
+        <li><svg><use href="#check"/></svg> Private API access</li>
+        <li><svg><use href="#check"/></svg> Custom agent rules</li>
+        <li><svg><use href="#check"/></svg> Revenue-share on subs</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- flywheel -->
+  <h2 class="reveal" style="font-size:1.5rem;margin:44px 0 4px">The flywheel.</h2>
+  <p class="sub reveal">Not "hope it pumps." The better the agent gets, the more holders it takes to use it.</p>
+  <div class="flow reveal">
+    <div class="node"><div class="n">01</div><div class="t">Hold $AGENT</div><div class="d">unlock the feed</div></div>
+    <div class="node"><div class="n">02</div><div class="t">Find gems, dodge rugs</div><div class="d">the pro-desk edge</div></div>
+    <div class="node"><div class="n">03</div><div class="t">More traders want it</div><div class="d">usage = demand</div></div>
+    <div class="node"><div class="n">04</div><div class="t">Buy pressure + buybacks</div><div class="d">subs fund the loop</div></div>
   </div>
 </div></section>
 
 <!-- BUY -->
 <section id="buy"><div class="wrap">
-  <div class="head reveal"><div class="eyebrow">Get Online</div><h2>Three steps to the edge.</h2></div>
-  <div class="flow">
-    <div class="fstep reveal"><div class="n">01</div><h4>Get On-Chain</h4><p>Wallet (MetaMask · Rabby · OKX), add Robinhood Chain (ID 4663), fund with ETH — or bridge from Solana, the way Vlad showed everyone.</p></div>
+  <div class="pbar reveal"><span class="idx">05</span><span class="nm">Get Online</span></div>
+  <h2 class="reveal">Three steps to the edge.</h2>
+  <div class="steps">
+    <div class="fstep reveal"><div class="n">01</div><h4>Get On-Chain</h4><p>Wallet (MetaMask · Rabby · OKX), add Robinhood Chain (ID 4663), fund with ETH — or bridge from Solana.</p></div>
     <div class="fstep reveal"><div class="n">02</div><h4>Buy $AGENT</h4><p>Grab it on NOXA Fun, then Uniswap once it graduates. Match the official contract below — accept no clones.</p></div>
     <div class="fstep reveal"><div class="n">03</div><h4>Unlock the Feed</h4><p>Connect and the agent goes live in your Telegram + dashboard. Now you see every launch the second it lands.</p></div>
   </div>
   <div class="ctaband reveal">
     <h2>The pros had 40 years. You get the agent.</h2>
     <p class="sub">Robinhood Chain's first AI trading agent that actually runs. Hold $AGENT — trade like the pros.</p>
-    <div class="cta" style="justify-content:center;margin-top:26px">
+    <div class="cta" style="justify-content:center;margin-top:24px">
       <a class="pill-btn" id="buyLink2" href="#">Buy on NOXA Fun →</a>
       <a class="pill-btn ghost" id="tgLink">Open the Agent (TG)</a>
     </div>
@@ -332,24 +514,25 @@
 
 <!-- FAQ -->
 <section><div class="wrap">
-  <div class="head reveal"><div class="eyebrow">FAQ</div><h2>Straight answers.</h2></div>
+  <div class="pbar reveal"><span class="idx">06</span><span class="nm">FAQ</span></div>
+  <h2 class="reveal">Straight answers.</h2>
   <div class="faq reveal">
-    <details open><summary>Is the agent actually real, or is this vaporware?</summary><p>Real. The safety scans read live contract bytecode for honeypots, mint and blacklist functions; the radar reads new pools off the chain directly; momentum comes from live volume and holder data. The live-feed section on this page mirrors the real output. Holding $AGENT unlocks it in your Telegram.</p></details>
-    <details><summary>Is this affiliated with Robinhood?</summary><p>No. $AGENT is an independent community project and a work of parody/commentary. Not affiliated with Robinhood Markets, Inc. It's built on Robinhood Chain and inspired by Vlad Tenev's own public "agentic trading" vision.</p></details>
-    <details><summary>Is it financial advice?</summary><p>No. The agent surfaces on-chain data and signals — it does not tell you what to buy, and nothing here is financial advice. Signals are information, not instructions. Always do your own research.</p></details>
-    <details><summary>Is there a tax?</summary><p>0/0, LP locked, no team bags. The agent's optional premium/subscription revenue funds development, buybacks and holder rewards.</p></details>
+    <details open><summary>Is the agent real, or vaporware?</summary><p>Real. The safety scans read live contract bytecode for honeypots, mint and blacklist functions; the radar reads new pools off the chain directly; momentum comes from live volume and holder data. The feed above mirrors the real output. Holding $AGENT unlocks it in your Telegram.</p></details>
+    <details><summary>Is this affiliated with Robinhood?</summary><p>No. $AGENT is an independent community project and a work of commentary. Not affiliated with Robinhood Markets, Inc. It's built on Robinhood Chain and inspired by Vlad Tenev's own public "agentic trading" vision.</p></details>
+    <details><summary>Is it financial advice?</summary><p>No. The agent surfaces on-chain data and signals — it does not tell you what to buy, and nothing here is financial advice. Signals are information, not instructions.</p></details>
+    <details><summary>Why do I need to hold to use it?</summary><p>Access is gated by your $AGENT balance, read on-chain — no subscription, no custody. It aligns the tool with the token: the more useful the agent, the more people hold to use it.</p></details>
   </div>
 </div></section>
 
 <footer><div class="wrap">
-  <div class="brand"><svg><use href="#core"/></svg><b>AGENT</b></div>
+  <div class="brand"><svg><use href="#core"/></svg><b>AGENT</b><span class="v mono">v1</span></div>
   <div class="socials">
     <a href="#" id="xLink">Follow · 𝕏</a>
     <a href="#" id="tgLink2">Open the Agent · TG</a>
     <a href="#" id="buyLink3">Get $AGENT</a>
   </div>
 </div>
-<div class="wrap"><p class="disc">$AGENT is a community project on Robinhood Chain and a work of parody/commentary, with no intrinsic value or expectation of financial return. Not affiliated with Robinhood Markets, Inc. The agent provides on-chain information and signals only — not financial advice and not trade instructions. Do your own research; only ride with what you can afford to lose.</p></div>
+<div class="wrap"><p class="disc">$AGENT is a community project on Robinhood Chain and a work of commentary, with no intrinsic value or expectation of financial return. Not affiliated with Robinhood Markets, Inc. The agent provides on-chain information and signals only — not financial advice and not trade instructions. Metrics shown are illustrative of the agent's output. Do your own research; only ride with what you can afford to lose.</p></div>
 </footer>
 
 <script>
@@ -357,49 +540,64 @@
   if(CFG.ca){const c=document.getElementById('ca');c.textContent=CFG.ca;c.onclick=()=>{navigator.clipboard.writeText(CFG.ca);const t=c.textContent;c.textContent='copied ✓';setTimeout(()=>c.textContent=t,1200)};}
   for(const [id,url] of [['buyLink','noxa'],['buyLink2','noxa'],['buyLink3','noxa'],['xLink','x'],['tgLink','tg'],['tgLink2','tg']]){const el=document.getElementById(id);if(el)el.href=CFG[url];}
 
-  // live feed simulation
-  const feed=[
-    ['muted','$ agent --watch robinhood-chain --live'],
-    ['g','● agent online · scanning every new pool'],
-    ['muted','────────────────────────────'],
-    ['w','[03:14:22] NEW LAUNCH detected  ·  $GILD / WETH'],
-    ['muted','   ↳ running 9-point safety scan…'],
-    ['g','   ✔ LP locked   ✔ no mint   ✔ no blacklist   ✔ not a honeypot'],
-    ['a','   ⚠ top wallet 6.2%  ·  liquidity $41k (thin)'],
-    ['g','   ► SAFETY: PASS (7/9)   momentum: +310% vol · 18 buys / 3 sells (5m)'],
-    ['muted','────────────────────────────'],
-    ['w','[03:14:51] NEW LAUNCH detected  ·  $MOONRAT / WETH'],
-    ['muted','   ↳ running 9-point safety scan…'],
-    ['r','   ✖ HONEYPOT — sells revert  ·  ✖ owner can mint'],
-    ['r','   ► SAFETY: FAIL — flagged, do not touch'],
-    ['muted','────────────────────────────'],
-    ['w','[03:15:09] VELOCITY ALERT  ·  $GILD'],
-    ['g','   ► buys accelerating · +540% vol (15m) · holders 41→180'],
-    ['g','   ► agent score: 82/100 — early momentum, safety clean'],
-    ['muted','────────────────────────────'],
-    ['muted','   holders see this feed in real time. everyone else sees it on the chart, later.'],
+  // ── live terminal: alternating PASS/FAIL scans, updates left log + right panel ──
+  const samples=[
+    {name:'$GILD / WETH', age:'age 41s · deployer 0x9a…c4', verdict:'PASS · 7 / 9', score:82, sv:'g',
+     checks:[['ok','✓','Sells enabled'],['ok','✓','No mint fn'],['ok','✓','No blacklist'],['ok','✓','Owner renounced'],['ok','✓','LP locked'],['ok','✓','Tax 0 / 0'],['warn','!','Top wallet 6.2%'],['warn','!','Liq $41k (thin)'],['ok','✓','Not honeypot']],
+     bars:[['Vol 5m','78%','+310%'],['Buy/Sell','86%','18 / 3'],['Holders','64%','41→180']],
+     log:[['w','NEW LAUNCH · $GILD / WETH'],['muted','  ↳ 9-point safety scan…'],['g','  ✔ LP locked · no mint · sells ok'],['a','  ⚠ liq $41k · top wallet 6.2%'],['g','  ► PASS 7/9 · momentum +310% · score 82']]},
+    {name:'$MOONRAT / WETH', age:'age 12s · deployer 0x4f…a1', verdict:'FAIL · honeypot', score:9, sv:'r',
+     checks:[['bad','✕','Sells REVERT'],['bad','✕','Owner can mint'],['ok','✓','No blacklist'],['bad','✕','Owner active'],['warn','!','LP unlocked'],['bad','✕','Tax 8 / 40'],['bad','✕','Top wallet 61%'],['ok','✓','Liq $22k'],['bad','✕','HONEYPOT']],
+     bars:[['Vol 5m','40%','+90%'],['Buy/Sell','20%','31 / 0'],['Holders','30%','2→44']],
+     log:[['w','NEW LAUNCH · $MOONRAT / WETH'],['muted','  ↳ 9-point safety scan…'],['r','  ✖ sells revert · owner can mint · tax 40%'],['r','  ► FAIL — HONEYPOT, do not touch']]},
+    {name:'$VELVET / WETH', age:'age 1m 4s · deployer 0x22…9d', verdict:'WATCH · 6 / 9', score:64, sv:'a',
+     checks:[['ok','✓','Sells enabled'],['ok','✓','No mint fn'],['ok','✓','No blacklist'],['warn','!','Owner active'],['ok','✓','LP locked'],['ok','✓','Tax 0 / 0'],['warn','!','Top wallet 9.1%'],['warn','!','Liq $28k'],['ok','✓','Not honeypot']],
+     bars:[['Vol 5m','52%','+140%'],['Buy/Sell','60%','12 / 5'],['Holders','48%','19→77']],
+     log:[['w','NEW LAUNCH · $VELVET / WETH'],['muted','  ↳ 9-point safety scan…'],['g','  ✔ safe · clean tax · LP locked'],['a','  ⚠ owner not renounced · thin liq'],['a','  ► WATCH 6/9 · early, mid risk · score 64']]},
+    {name:'$AERO / WETH', age:'age 28s · deployer 0x7b…e0', verdict:'PASS · 8 / 9', score:88, sv:'g',
+     checks:[['ok','✓','Sells enabled'],['ok','✓','No mint fn'],['ok','✓','No blacklist'],['ok','✓','Owner renounced'],['ok','✓','LP locked'],['ok','✓','Tax 0 / 0'],['ok','✓','Top wallet 3.4%'],['warn','!','Liq $71k'],['ok','✓','Not honeypot']],
+     bars:[['Vol 5m','92%','+520%'],['Buy/Sell','90%','44 / 6'],['Holders','80%','60→340']],
+     log:[['w','NEW LAUNCH · $AERO / WETH'],['muted','  ↳ 9-point safety scan…'],['g','  ✔ fully renounced · distributed · deep-ish liq'],['g','  ► PASS 8/9 · momentum +520% · score 88 🔥']]},
   ];
-  const fb=document.getElementById('feedbody');
-  function runFeed(){
-    fb.innerHTML=''; let i=0;
-    (function next(){
-      if(i>=feed.length){ setTimeout(()=>runFeed(),4200); return; }
-      const [cls,txt]=feed[i];
-      const d=document.createElement('div');
-      d.className='ln '+cls; d.textContent=txt; d.style.animationDelay='0s';
-      fb.appendChild(d);
-      // keep last ~16 lines
-      while(fb.children.length>16) fb.removeChild(fb.firstChild);
-      i++; setTimeout(next, 260+Math.random()*380);
-    })();
+  const tlog=document.getElementById('tlog');
+  let logLines=[['muted','$ agent --watch robinhood-chain --live'],['g','● agent online · streaming every new pool'],['muted','────────────────────────────']];
+  function renderLog(){
+    tlog.innerHTML=logLines.slice(-11).map(([c,t])=>`<div class="ln ${c}">${t}</div>`).join('')+'<div class="ln"><span class="cur"></span></div>';
   }
-  // start feed when visible
-  const fio=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){runFeed();fio.disconnect();}})},{threshold:.2});
-  fio.observe(document.querySelector('.term'));
+  function setPanel(s){
+    document.getElementById('p-name').textContent=s.name;
+    document.getElementById('p-age').textContent=s.age;
+    document.getElementById('p-score').textContent=s.score;
+    const vd=document.getElementById('p-verdict'); vd.textContent=s.verdict;
+    vd.style.color=s.sv==='g'?'var(--green)':s.sv==='r'?'var(--red)':'var(--amber)';
+    document.getElementById('p-score').style.color=vd.style.color;
+    const ring=document.querySelector('.score .ring');
+    const col=s.sv==='g'?'#00c805':s.sv==='r'?'#ff4d52':'#f0a935';
+    ring.style.background=`conic-gradient(${col} 0 ${s.score}%,rgba(255,255,255,.08) ${s.score}% 100%)`;
+    document.getElementById('p-checks').innerHTML=s.checks.map(([cl,mk,tx])=>`<div class="c ${cl}"><span class="mk">${mk}</span> ${tx}</div>`).join('');
+    document.querySelector('.mbars').innerHTML=s.bars.map(([k,w,v])=>`<div class="mb"><span>${k}</span><span class="bar"><i style="width:${w}"></i></span><span class="val">${v}</span></div>`).join('');
+  }
+  let si=0, tstats={scans:2041,pass:318,rug:1140,watch:7};
+  function tick(){
+    const s=samples[si%samples.length]; si++;
+    // append log
+    logLines.push(...s.log,['muted','────────────────────────────']);
+    if(logLines.length>40) logLines=logLines.slice(-40);
+    renderLog();
+    setPanel(s);
+    // bump stats
+    tstats.scans++; if(s.sv==='g')tstats.pass++; if(s.sv==='r')tstats.rug++;
+    document.getElementById('ts-scans').textContent=tstats.scans.toLocaleString();
+    document.getElementById('ts-pass').textContent=tstats.pass.toLocaleString();
+    document.getElementById('ts-rug').textContent=tstats.rug.toLocaleString();
+  }
+  let feedStarted=false;
+  const fio=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting&&!feedStarted){feedStarted=true;renderLog();tick();setInterval(tick,3400);fio.disconnect();}})},{threshold:.15});
+  fio.observe(document.querySelector('.terminal'));
 
-  const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+  const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-  document.querySelectorAll('header .reveal').forEach((el,i)=>setTimeout(()=>el.classList.add('in'),100+i*130));
+  document.querySelectorAll('header .reveal').forEach((el,i)=>setTimeout(()=>el.classList.add('in'),100+i*120));
 </script>
 </body>
 </html>
