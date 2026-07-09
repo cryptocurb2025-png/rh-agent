@@ -34,10 +34,8 @@
 
   /* ambient flare */
   .flare{position:fixed;inset:0;z-index:-2;pointer-events:none;overflow:hidden}
-  .flare::before{content:"";position:absolute;top:-24%;left:50%;transform:translateX(-50%);width:1100px;height:620px;
-    background:radial-gradient(closest-side,rgba(0,200,5,.16),transparent 72%);filter:blur(12px);animation:breath 13s ease-in-out infinite}
-  .flare::after{content:"";position:absolute;top:8%;left:6%;width:520px;height:420px;
-    background:radial-gradient(closest-side,rgba(0,200,5,.07),transparent 70%);animation:breath 17s ease-in-out infinite reverse}
+  .flare::before{content:"";position:absolute;top:-26%;left:50%;transform:translateX(-50%);width:1000px;height:560px;
+    background:radial-gradient(closest-side,rgba(0,200,5,.08),transparent 72%);filter:blur(14px);animation:breath 15s ease-in-out infinite}
   @keyframes breath{50%{opacity:.55;transform:translateX(-50%) scale(1.08)}}
   .grid-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
     background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:46px 46px;
@@ -74,11 +72,36 @@
   .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
   .cta .pill-btn{padding:13px 24px;font-size:.98rem}
 
-  .artcard{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line-2);
-    background:radial-gradient(120% 90% at 50% 0%,rgba(0,200,5,.14),transparent 55%),var(--surf);box-shadow:0 40px 90px rgba(0,0,0,.55)}
-  .artcard img{width:100%;aspect-ratio:1;object-fit:cover}
-  .artcard .tag{position:absolute;left:14px;bottom:14px;z-index:2;display:flex;gap:8px;align-items:center;background:rgba(6,8,10,.74);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:100px;padding:7px 13px;font-size:.78rem;font-weight:600}
-  .artcard .tag svg{width:14px;height:14px;fill:var(--green)}
+  /* hero live console — the actual product, not stock art */
+  .console{border:1px solid var(--line-2);border-radius:14px;overflow:hidden;background:#070a0b;box-shadow:0 30px 70px rgba(0,0,0,.55)}
+  .console .chd{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02)}
+  .console .cdot{width:10px;height:10px;border-radius:50%}
+  .console .cp{margin-left:8px;font-family:'Geist Mono',monospace;font-size:.72rem;color:var(--txt-3)}
+  .console .con{margin-left:auto;font-family:'Geist Mono',monospace;font-size:.66rem;color:var(--green);display:flex;align-items:center;gap:6px}
+  .console .con i{width:6px;height:6px;border-radius:50%;background:var(--green);animation:ping 2s infinite}
+  .console .cbody{padding:18px 18px 16px}
+  .cscan-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .cs-name{font-size:1.22rem;font-weight:800;letter-spacing:-.01em}
+  .cs-verdict{font-family:'Geist Mono',monospace;font-size:.74rem;font-weight:600;padding:5px 11px;border-radius:100px;background:rgba(0,200,5,.1);border:1px solid var(--line-g);color:var(--green)}
+  .cs-meta{font-family:'Geist Mono',monospace;font-size:.68rem;color:var(--txt-3);margin-top:6px}
+  .cs-checks{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;margin:16px 0;font-family:'Geist Mono',monospace;font-size:.7rem}
+  .cs-checks .c{display:flex;align-items:center;gap:8px;color:var(--txt-2)}
+  .cs-checks .c .mk{width:14px;height:14px;border-radius:4px;display:grid;place-items:center;font-size:.6rem;flex:none}
+  .cs-checks .c.ok .mk{background:rgba(0,200,5,.15);color:var(--green)}
+  .cs-checks .c.warn .mk{background:rgba(240,169,53,.15);color:var(--amber)}
+  .cs-checks .c.bad .mk{background:rgba(255,77,82,.15);color:var(--red)}
+  .cs-foot{display:flex;align-items:center;gap:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .cs-score{display:flex;flex-direction:column;flex:none}
+  .cs-score .k{font-family:'Geist Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--txt-3)}
+  .cs-score .v{font-family:'Geist Mono',monospace;font-size:1.8rem;font-weight:700;color:var(--green);line-height:1}
+  .cs-mom{flex:1;display:flex;flex-direction:column;gap:6px}
+  .cs-mom .mb{display:grid;grid-template-columns:58px 1fr auto;align-items:center;gap:9px;font-family:'Geist Mono',monospace;font-size:.62rem;color:var(--txt-3)}
+  .cs-mom .mb .bar{height:4px;border-radius:100px;background:rgba(255,255,255,.06);overflow:hidden}
+  .cs-mom .mb .bar i{display:block;height:100%;background:var(--green);border-radius:100px}
+  .cs-mom .mb .val{color:var(--txt);font-weight:600}
+  .cs-log{margin-top:14px;font-family:'Geist Mono',monospace;font-size:.66rem;color:var(--txt-3);border-top:1px solid var(--line);padding-top:12px;min-height:38px}
+  .cs-log .ll{opacity:0;animation:fadein .3s forwards}
+  .cs-log .g{color:var(--green)} .cs-log .r{color:var(--red)} .cs-log .a{color:var(--amber)}
 
   /* metrics rail */
   .rail{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;margin-top:44px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
@@ -305,9 +328,25 @@
         <a class="pill-btn ghost" href="#feed">Watch It Run</a>
       </div>
     </div>
-    <div class="artcard reveal">
-      <img src="assets/agent_hero.png" alt="The Agent" onerror="this.style.opacity=.001">
-      <span class="tag"><svg><use href="#core"/></svg> agent · <span class="green">online</span></span>
+    <div class="console reveal">
+      <div class="chd">
+        <span class="cdot" style="background:#ff5f57"></span><span class="cdot" style="background:#febc2e"></span><span class="cdot" style="background:#28c840"></span>
+        <span class="cp">agent · scanning robinhood-chain</span>
+        <span class="con"><i></i>LIVE</span>
+      </div>
+      <div class="cbody">
+        <div class="cscan-top">
+          <div class="cs-name" id="h-name">$GILD / WETH</div>
+          <div class="cs-verdict" id="h-verdict">PASS · 7/9</div>
+        </div>
+        <div class="cs-meta" id="h-meta">age 41s · liq $41k · 266 holders · top 3.2%</div>
+        <div class="cs-checks" id="h-checks"></div>
+        <div class="cs-foot">
+          <div class="cs-score"><span class="k">agent score</span><span class="v" id="h-score">82</span></div>
+          <div class="cs-mom" id="h-mom"></div>
+        </div>
+        <div class="cs-log" id="h-log"></div>
+      </div>
     </div>
   </div>
 
@@ -577,22 +616,39 @@
     document.getElementById('p-checks').innerHTML=s.checks.map(([cl,mk,tx])=>`<div class="c ${cl}"><span class="mk">${mk}</span> ${tx}</div>`).join('');
     document.querySelector('.mbars').innerHTML=s.bars.map(([k,w,v])=>`<div class="mb"><span>${k}</span><span class="bar"><i style="width:${w}"></i></span><span class="val">${v}</span></div>`).join('');
   }
+  // ── hero live console (the actual product in the hero) ──
+  function setHero(s){
+    const col=s.sv==='g'?'var(--green)':s.sv==='r'?'var(--red)':'var(--amber)';
+    document.getElementById('h-name').textContent=s.name;
+    const hv=document.getElementById('h-verdict'); hv.textContent=s.verdict; hv.style.color=col;
+    hv.style.background=s.sv==='g'?'rgba(0,200,5,.1)':s.sv==='r'?'rgba(255,77,82,.1)':'rgba(240,169,53,.1)';
+    hv.style.borderColor=s.sv==='g'?'var(--line-g)':s.sv==='r'?'rgba(255,77,82,.3)':'rgba(240,169,53,.3)';
+    document.getElementById('h-meta').textContent=s.age.replace('deployer','dep')+' · '+(s.bars?('vol '+s.bars[0][2]):'');
+    document.getElementById('h-checks').innerHTML=s.checks.slice(0,6).map(([cl,mk,tx])=>`<div class="c ${cl}"><span class="mk">${mk}</span> ${tx}</div>`).join('');
+    const hs=document.getElementById('h-score'); hs.textContent=s.score; hs.style.color=col;
+    document.getElementById('h-mom').innerHTML=s.bars.map(([k,w,v])=>`<div class="mb"><span>${k}</span><span class="bar"><i style="width:${w};background:${col}"></i></span><span class="val">${v}</span></div>`).join('');
+    const last=s.log[s.log.length-1]; const hl=document.getElementById('h-log');
+    hl.innerHTML=`<div class="ll ${last[0]==='g'?'g':last[0]==='r'?'r':last[0]==='a'?'a':''}">▸ ${last[1].replace(/^\s*[►✔✖]?\s*/,'')}</div>`;
+  }
+
   let si=0, tstats={scans:2041,pass:318,rug:1140,watch:7};
   function tick(){
     const s=samples[si%samples.length]; si++;
-    // append log
     logLines.push(...s.log,['muted','────────────────────────────']);
     if(logLines.length>40) logLines=logLines.slice(-40);
     renderLog();
     setPanel(s);
-    // bump stats
+    setHero(s);
     tstats.scans++; if(s.sv==='g')tstats.pass++; if(s.sv==='r')tstats.rug++;
     document.getElementById('ts-scans').textContent=tstats.scans.toLocaleString();
     document.getElementById('ts-pass').textContent=tstats.pass.toLocaleString();
     document.getElementById('ts-rug').textContent=tstats.rug.toLocaleString();
   }
+  // hero console starts immediately on load; terminal starts one full cycle in
+  setHero(samples[0]);
+  let heroTimer=setInterval(()=>{const s=samples[si%samples.length];si++;setHero(s);},3400);
   let feedStarted=false;
-  const fio=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting&&!feedStarted){feedStarted=true;renderLog();tick();setInterval(tick,3400);fio.disconnect();}})},{threshold:.15});
+  const fio=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting&&!feedStarted){feedStarted=true;clearInterval(heroTimer);renderLog();tick();setInterval(tick,3400);fio.disconnect();}})},{threshold:.15});
   fio.observe(document.querySelector('.terminal'));
 
   const io=new IntersectionObserver((es)=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
