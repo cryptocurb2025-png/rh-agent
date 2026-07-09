@@ -14,11 +14,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#06080a; --bg-2:#090c0e; --surf:#0d1214; --surf-2:#111719; --surf-3:#161d20;
-    --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.13); --line-g:rgba(0,200,5,.22);
-    --txt:#eef3f1; --txt-2:#9aa8a3; --txt-3:#66756f;
-    --green:#00c805; --green-hi:#5cff62; --green-dim:#0a9a12; --green-glow:rgba(0,200,5,.16);
-    --gold:#e8c24a; --red:#ff4d52; --amber:#f0a935;
+    --bg:#05070a; --bg-2:#080b0f; --surf:#0c1116; --surf-2:#10161c; --surf-3:#141c23;
+    --line:rgba(160,180,200,.09); --line-2:rgba(160,180,200,.16); --line-g:rgba(0,224,120,.24);
+    --txt:#eaf1f2; --txt-2:#93a3a6; --txt-3:#5f7075;
+    --green:#00e078; --green-hi:#4dffa0; --green-dim:#07a659; --green-glow:rgba(0,224,120,.14);
+    --gold:#f0c25a; --gold-hi:#ffdd88; --red:#ff5a5f; --amber:#f4a638;
     --r:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -274,6 +274,30 @@
   .socials a{font-size:.9rem;font-weight:600;color:var(--txt-2);border:1px solid var(--line);border-radius:100px;padding:8px 16px;transition:all .18s}
   .socials a:hover{color:var(--txt);border-color:var(--line-2)}
   .disc{color:var(--txt-3);font-size:.74rem;line-height:1.7;max-width:780px;margin-top:22px}
+
+  /* toast */
+  #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);z-index:200;
+    background:var(--surf-2);border:1px solid var(--line-2);border-radius:100px;padding:11px 20px;
+    font-size:.86rem;font-weight:600;color:var(--txt);box-shadow:0 20px 50px rgba(0,0,0,.6);
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;display:flex;align-items:center;gap:9px}
+  #toast::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* premium depth on surfaces */
+  .feat,.panel,.tier,.fstep,.stat,.rail .m{background:linear-gradient(180deg,var(--surf-2),var(--surf))}
+  .feat:hover{box-shadow:0 20px 50px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.03)}
+  /* gold-accented featured tier (premium differentiation) */
+  .tier.feat-tier{border-color:rgba(240,194,90,.34);background:linear-gradient(180deg,rgba(240,194,90,.06),var(--surf))}
+  .tier.feat-tier::before{content:"MOST HELD";color:var(--gold)}
+  .tier.feat-tier .th{color:var(--gold-hi)} .tier.feat-tier .hold{color:var(--gold)}
+  .tier.feat-tier ul li svg{fill:var(--gold)}
+  /* gold on the flagship stat + score for hierarchy */
+  .rail .m:first-child .v{color:var(--gold)}
+  .brand .v{border-color:rgba(240,194,90,.3);color:var(--gold)}
+  /* refined scanline shimmer on terminal */
+  .terminal{position:relative}
+  .terminal::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:16px;
+    background:linear-gradient(180deg,rgba(0,224,120,.03),transparent 18%);mix-blend-mode:screen}
 
   .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
   .reveal.in{opacity:1;transform:none}
@@ -575,9 +599,22 @@
 </footer>
 
 <script>
-  const CFG={ ca:"", noxa:"https://fun.noxa.fi/robinhood", x:"https://x.com/", tg:"https://t.me/" };
-  if(CFG.ca){const c=document.getElementById('ca');c.textContent=CFG.ca;c.onclick=()=>{navigator.clipboard.writeText(CFG.ca);const t=c.textContent;c.textContent='copied ✓';setTimeout(()=>c.textContent=t,1200)};}
-  for(const [id,url] of [['buyLink','noxa'],['buyLink2','noxa'],['buyLink3','noxa'],['xLink','x'],['tgLink','tg'],['tgLink2','tg']]){const el=document.getElementById(id);if(el)el.href=CFG[url];}
+  // ── config (set at launch) ──
+  const CFG={ ca:"", noxa:"https://fun.noxa.fi/robinhood", x:"", tg:"" };
+
+  // toast
+  const toast=(msg)=>{let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200);};
+
+  // CA copy
+  const c=document.getElementById('ca');
+  if(CFG.ca){c.textContent=CFG.ca;}
+  c.onclick=()=>{ if(!CFG.ca){toast('Contract goes live at launch');return;} navigator.clipboard.writeText(CFG.ca);const t=c.textContent;c.textContent='copied ✓';setTimeout(()=>c.textContent=t,1200); };
+
+  // wire every button: real links open, pre-launch links show a toast (never dead)
+  const wire=(id,url,soon)=>{const el=document.getElementById(id);if(!el)return; if(url){el.href=url;el.target='_blank';el.rel='noopener';} else {el.href='#';el.addEventListener('click',e=>{e.preventDefault();toast(soon);});}};
+  ['buyLink','buyLink2','buyLink3'].forEach(id=>wire(id,CFG.noxa? CFG.noxa:null,'Buy link goes live at launch'));
+  ['xLink'].forEach(id=>wire(id,CFG.x||null,'X account goes live at launch'));
+  ['tgLink','tgLink2'].forEach(id=>wire(id,CFG.tg||null,'Telegram goes live at launch'));
 
   // ── live terminal: alternating PASS/FAIL scans, updates left log + right panel ──
   const samples=[
@@ -611,7 +648,7 @@
     vd.style.color=s.sv==='g'?'var(--green)':s.sv==='r'?'var(--red)':'var(--amber)';
     document.getElementById('p-score').style.color=vd.style.color;
     const ring=document.querySelector('.score .ring');
-    const col=s.sv==='g'?'#00c805':s.sv==='r'?'#ff4d52':'#f0a935';
+    const col=s.sv==='g'?'#00e078':s.sv==='r'?'#ff5a5f':'#f4a638';
     ring.style.background=`conic-gradient(${col} 0 ${s.score}%,rgba(255,255,255,.08) ${s.score}% 100%)`;
     document.getElementById('p-checks').innerHTML=s.checks.map(([cl,mk,tx])=>`<div class="c ${cl}"><span class="mk">${mk}</span> ${tx}</div>`).join('');
     document.querySelector('.mbars').innerHTML=s.bars.map(([k,w,v])=>`<div class="mb"><span>${k}</span><span class="bar"><i style="width:${w}"></i></span><span class="val">${v}</span></div>`).join('');
